@@ -10,8 +10,8 @@ resident menu bar tool with a global hotkey.
 ## Install
 
 ```sh
-git clone https://github.com/jonx/ClipTo.git
-cd ClipTo
+git clone https://github.com/jonx/clip-to.git
+cd clip-to
 make install            # builds with `swift build -c release`, installs to /opt/homebrew/bin/ct
 ```
 
