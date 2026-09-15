@@ -9,7 +9,6 @@ func printHelp() {
     print()
     print(T.bold("Commands"))
     for t in Target.allCases { print("  " + T.green(t.rawValue.padding(toLength: 8, withPad: " ", startingAt: 0)) + "  " + t.help) }
-    print("  " + T.green("show".padding(toLength: 8, withPad: " ", startingAt: 0)) + "  list the flavors on the clipboard with a preview")
     print("  " + T.green("daemon".padding(toLength: 8, withPad: " ", startingAt: 0)) + "  stay resident: menu bar icon + global hotkey (default \(Hotkey.default.description)) that pops up a format chooser")
     print("  " + T.green("install".padding(toLength: 8, withPad: " ", startingAt: 0)) + "  start the daemon now and at every login (LaunchAgent); " + T.green("uninstall") + " removes it")
     print()
@@ -22,6 +21,8 @@ func printHelp() {
     ]
     for (k, v) in opts { print("  " + T.yellow(k.padding(toLength: 10, withPad: " ", startingAt: 0)) + "  " + v) }
     print()
+    print(T.dim("Commands can be abbreviated to their first letter: ct r, ct m, ct p, ct h, ct t, ct d, ct i, ct u."))
+    print(T.dim("Without a command, ct prints this help and what is on the clipboard (previews cut at 600 characters)."))
     print(T.dim("Example: copy some Markdown, run `ct rich`, paste into Mail or Slack."))
 }
 
@@ -60,7 +61,8 @@ while idx < args.count {
     }
     idx += 1
 }
-let cmd = positional.first ?? ""
+let aliases = ["r": "rich", "m": "md", "p": "plain", "h": "html", "t": "text", "d": "daemon", "i": "install", "u": "uninstall"]
+let cmd = aliases[positional.first ?? ""] ?? positional.first ?? ""
 
 func input(prefer: [Flavor]) -> Source {
     if let f = infile {
@@ -85,8 +87,6 @@ func hotkeyOrExit() -> Hotkey {
 switch cmd {
 case "":
     printHelp(); print(); printShow(); exit(0)
-case "show":
-    printShow(); exit(0)
 case "daemon":
     Daemon(hotkey: hotkeyOrExit()).run()
 case "install":

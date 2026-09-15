@@ -20,8 +20,7 @@ Use `make install PREFIX=/usr/local` for another location. Requires macOS 13 or 
 ## Command line
 
 ```
-ct                 help plus what is on the clipboard right now
-ct show            list the flavors on the clipboard with a preview
+ct                 help plus what is on the clipboard right now (previews cut at 600 characters)
 
 ct rich            Markdown -> rich text (HTML + RTF + plain). Pasting keeps formatting
 ct md              rich text (HTML/RTF) -> Markdown source
@@ -34,6 +33,7 @@ ct text            keep only the plain-text flavor (drop HTML/RTF)
 -p                 print the result after writing the clipboard
 ```
 
+Commands can be shortened to their first letter: `ct r`, `ct m`, `ct p`, `ct h`, `ct t`, `ct d`, `ct i`, `ct u`.
 Output is colored when writing to a terminal. Set `NO_COLOR` to disable.
 
 ## Resident mode and hotkey
@@ -58,7 +58,7 @@ Hotkey names: `cmd`, `ctrl`, `alt`, `shift`, letters, digits, `f1`..`f12`, `spac
 The macOS clipboard holds several representations of the same content at once. The copying
 app decides which ones to provide; the pasting app picks the richest one it understands.
 Terminals and code editors always take plain text. Mail, Notes, Slack, Pages, Word and browsers
-take HTML first, then RTF, then plain text. `ct show` tells you which flavors are present, so you
+take HTML first, then RTF, then plain text. `ct` on its own tells you which flavors are present, so you
 know what a paste will do. `ct rich` writes all three from Markdown; `ct text` keeps only plain
 text so every app pastes it unchanged.
 
