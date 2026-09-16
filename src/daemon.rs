@@ -33,6 +33,20 @@ pub fn parse_hotkey(spec: &str) -> Result<HotKey, String> {
     spec.parse::<HotKey>().map_err(|e| format!("invalid hotkey '{spec}': {e}"))
 }
 
+/// Is the "force" modifier (⌥ on macOS, Alt on Windows) held right now?
+fn force_modifier_held() -> bool {
+    #[cfg(target_os = "macos")]
+    { objc2_app_kit::NSEvent::modifierFlags_class().contains(objc2_app_kit::NSEventModifierFlags::Option) }
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_MENU};
+        let state = unsafe { GetAsyncKeyState(VK_MENU as i32) };
+        state < 0
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    { false }
+}
+
 /// A tiny clipboard glyph drawn in code, so no image file has to ship.
 fn icon() -> Icon {
     const W: u32 = 22;
@@ -111,6 +125,7 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     if resident {
         let _ = menu.append(&PredefinedMenuItem::separator());
         let _ = menu.append(&MenuItem::new(format!("Hotkey: {hotkey_desc}"), false, None));
+        let _ = menu.append(&MenuItem::new(format!("Hold {} while choosing to force a conversion", if cfg!(target_os = "macos") { "⌥" } else { "Alt" }), false, None));
         if cfg!(target_os = "macos") {
             let ok = crate::paste::trusted(false);
             let label = if ok { "Accessibility: granted (needed to paste)" } else { "Accessibility: not granted — open Settings…" };
@@ -209,7 +224,16 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
             let target = ids.targets.iter().chain(popup.iter().flat_map(|p| p.1.targets.iter()))
                 .find(|(i, _)| i == id).map(|(_, t)| *t);
             if let Some(t) = target {
-                match convert::read_source(&t.prefer()) {
+                let force = force_modifier_held();
+                let satisfied = if force { None } else { convert::already_satisfied(t) };
+                if let Some(reason) = satisfied {
+                    eprintln!("ct: clipboard unchanged: {reason} (hold the modifier to force)");
+                    tray.set_title(Some(format!(" = {}", t.title())));
+                    if auto_paste && from_popup {
+                        std::thread::sleep(Duration::from_millis(120));
+                        if let Err(e) = crate::paste::paste() { eprintln!("ct: {e}"); tray.set_title(Some(" ✗ paste")); }
+                    }
+                } else { match convert::read_source(&t.prefer()) {
                     None => { tray.set_title(Some(" ✗ empty")); }
                     Some(src) => {
                         let out = convert::convert(&src, t);
@@ -225,7 +249,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                             Err(e) => tray.set_title(Some(format!(" ✗ {e}"))),
                         }
                     }
-                }
+                } }
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
                 from_popup = false;
             } else if id == "about" {

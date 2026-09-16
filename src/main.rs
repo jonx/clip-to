@@ -31,10 +31,12 @@ fn print_help() {
         ("-o", "print the result instead of writing the clipboard"),
         ("-p", "print the result after writing the clipboard"),
         ("-x", "exclusive: drop the other flavors (md, plain, html keep HTML/RTF by default)"),
+        ("-f", "force: convert even when the clipboard already holds the requested format"),
         ("--hotkey K", "daemon/install: key combo, e.g. ctrl+alt+super+v, ctrl+shift+f9"),
         ("--no-paste", "daemon/install: only convert the clipboard, do not paste the result into the active app"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
     println!();
+    println!("{}", term::dim("If the clipboard already holds the requested format (HTML present for rich, Markdown-looking text for md...), nothing is converted; -f forces it."));
     println!("{}", term::dim("md, plain and html only update the plain-text flavor and keep HTML/RTF, so rich apps still paste the original formatting."));
     println!("{}", term::dim("Commands can be abbreviated to their first letter: ct r, ct m, ct p, ct h, ct t, ct d, ct i, ct u."));
     println!("{}", term::dim("Without a command, ct prints this help and what is on the clipboard (previews cut at 600 characters)."));
@@ -66,6 +68,7 @@ fn main() {
     let mut to_stdout = false;
     let mut also_print = false;
     let mut exclusive = false;
+    let mut force = false;
     let mut hotkey: Option<String> = None;
     let mut no_paste = false;
     let mut positional: Vec<String> = Vec::new();
@@ -76,6 +79,7 @@ fn main() {
             "-o" => to_stdout = true,
             "-p" => also_print = true,
             "-x" => exclusive = true,
+            "-f" => force = true,
             "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); }
             "--no-paste" => no_paste = true,
             "-h" | "--help" | "help" => { print_help(); return; }
@@ -101,6 +105,12 @@ fn main() {
                 print_help();
                 std::process::exit(2);
             };
+            if infile.is_none() && !to_stdout && !force {
+                if let Some(reason) = convert::already_satisfied(target) {
+                    eprintln!("{} clipboard unchanged: {reason} {}", term::err_green("="), term::err_dim("(-f to convert anyway)"));
+                    return;
+                }
+            }
             let src = match &infile {
                 Some(f) => {
                     let data = if f == "-" {

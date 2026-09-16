@@ -34,7 +34,15 @@ ct text            keep only the plain-text flavor (drop HTML/RTF)
 -o                 print the result instead of writing the clipboard
 -p                 print the result after writing the clipboard
 -x                 exclusive: drop the other flavors
+-f                 force: convert even when the clipboard already holds the requested format
 ```
+
+If the clipboard already holds what you ask for, nothing is converted and the clipboard is left
+untouched: `rich` when HTML is present, `md` when there is no rich flavor or the text already
+looks like Markdown, `plain` when the text has no Markdown syntax, `text` when only plain text
+is there. This keeps `ct rich` followed by `ct md` lossless and never degrades content copied
+from a rich app. `-f` forces the conversion. From the hotkey popup, hold ⌥ (Alt on Windows)
+while choosing.
 
 `md`, `plain` and `html` are non-destructive: they only replace the plain-text flavor and keep
 HTML and RTF, so Mail or Slack still paste the original formatting while a terminal or editor gets

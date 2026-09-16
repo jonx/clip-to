@@ -116,3 +116,55 @@ pub fn read_source(prefer: &[Flavor]) -> Option<Source> {
     }
     None
 }
+
+/// Cheap check for Markdown syntax: headings, emphasis, list markers, code, links.
+pub fn looks_like_markdown(text: &str) -> bool {
+    let mut lines = 0;
+    let mut hits = 0;
+    for line in text.lines() {
+        let t = line.trim_start();
+        if t.is_empty() { continue; }
+        lines += 1;
+        if t.starts_with('#') || t.starts_with("- ") || t.starts_with("* ") || t.starts_with("> ") || t.starts_with("```")
+            || t.starts_with("1. ") || t.starts_with("| ")
+        { hits += 1; }
+        if t.contains("**") || t.contains('`') || (t.contains("](") && t.contains('[')) { hits += 1; }
+    }
+    hits > 0 && (lines <= 3 || hits * 4 >= lines)
+}
+
+fn looks_like_html(text: &str) -> bool {
+    let t = text.trim_start();
+    t.starts_with('<') && text.contains("</")
+}
+
+/// When the clipboard already holds what `target` would produce, say why and skip the conversion.
+pub fn already_satisfied(target: Target) -> Option<String> {
+    let present = clipboard::present();
+    let has = |f: Flavor| present.contains(&f);
+    let text = || clipboard::read(Flavor::Text).and_then(|b| String::from_utf8(b).ok()).unwrap_or_default();
+    match target {
+        Target::Rich => has(Flavor::Html).then(|| "HTML is already on the clipboard".to_string()),
+        Target::Md => {
+            if !has(Flavor::Text) { return None; }
+            if !has(Flavor::Html) && !has(Flavor::Rtf) { return Some("no rich flavor, the text is taken as is".into()); }
+            looks_like_markdown(&text()).then(|| "the text flavor already looks like Markdown".to_string())
+        }
+        Target::Plain => (has(Flavor::Text) && !has(Flavor::Html) && !has(Flavor::Rtf) && !looks_like_markdown(&text()))
+            .then(|| "the text has no Markdown syntax".to_string()),
+        Target::Html => (has(Flavor::Text) && looks_like_html(&text())).then(|| "the text flavor already is HTML source".to_string()),
+        Target::Text => (present == [Flavor::Text]).then(|| "only plain text is on the clipboard".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::looks_like_markdown;
+    #[test]
+    fn markdown_detection() {
+        assert!(looks_like_markdown("# Title\n- **bold** item\n"));
+        assert!(looks_like_markdown("runs as `C:Ferail` on AROS"));
+        assert!(!looks_like_markdown("Kalamatee [1:20 AM] have a play with C:IPMI\nJohn made updates to AROS WIP.\n"));
+        assert!(!looks_like_markdown("/Users/aros/Desktop/Screenshot.png"));
+    }
+}
