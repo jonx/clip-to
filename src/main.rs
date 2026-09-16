@@ -6,6 +6,7 @@ mod daemon;
 #[cfg(target_os = "macos")]
 mod macos_menu;
 mod markdown;
+mod paste;
 mod term;
 
 use convert::{Flavor, Target};
@@ -21,7 +22,7 @@ fn print_help() {
     println!();
     println!("{}", term::bold("Commands"));
     for t in Target::ALL { println!("  {}  {}", term::green(&pad(t.name(), 9)), t.help()); }
-    println!("  {}  stay resident: tray icon + global hotkey (default {}) that pops up a format chooser", term::green(&pad("daemon", 9)), daemon::describe(daemon::DEFAULT_HOTKEY));
+    println!("  {}  stay resident: tray icon + global hotkey (default {}) that pops up a format chooser and pastes the result", term::green(&pad("daemon", 9)), daemon::describe(daemon::DEFAULT_HOTKEY));
     println!("  {}  start the daemon now and at every login; {} removes it", term::green(&pad("install", 9)), term::green("uninstall"));
     println!();
     println!("{}", term::bold("Options"));
@@ -31,6 +32,7 @@ fn print_help() {
         ("-p", "print the result after writing the clipboard"),
         ("-x", "exclusive: drop the other flavors (md, plain, html keep HTML/RTF by default)"),
         ("--hotkey K", "daemon/install: key combo, e.g. ctrl+alt+super+v, ctrl+shift+f9"),
+        ("--no-paste", "daemon/install: only convert the clipboard, do not paste the result into the active app"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
     println!();
     println!("{}", term::dim("md, plain and html only update the plain-text flavor and keep HTML/RTF, so rich apps still paste the original formatting."));
@@ -65,6 +67,7 @@ fn main() {
     let mut also_print = false;
     let mut exclusive = false;
     let mut hotkey: Option<String> = None;
+    let mut no_paste = false;
     let mut positional: Vec<String> = Vec::new();
     let mut i = 0;
     while i < args.len() {
@@ -74,6 +77,7 @@ fn main() {
             "-p" => also_print = true,
             "-x" => exclusive = true,
             "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); }
+            "--no-paste" => no_paste = true,
             "-h" | "--help" | "help" => { print_help(); return; }
             "-v" | "--version" => { println!("ct {VERSION}"); return; }
             other => positional.push(other.to_string()),
@@ -85,10 +89,10 @@ fn main() {
 
     match cmd {
         "" => { print_help(); println!(); print_clipboard(); }
-        "daemon" | "d" => daemon::run(&hotkey_spec),
+        "daemon" | "d" => daemon::run(&hotkey_spec, !no_paste),
         "install" | "i" => {
             if let Err(e) = daemon::parse_hotkey(&hotkey_spec) { fail(&e); }
-            match autostart::install(hotkey.as_deref()) { Ok(m) => eprintln!("ct: {m}"), Err(e) => fail(&format!("install failed: {e}")) }
+            match autostart::install(hotkey.as_deref(), no_paste) { Ok(m) => eprintln!("ct: {m}"), Err(e) => fail(&format!("install failed: {e}")) }
         }
         "uninstall" | "u" => match autostart::uninstall() { Ok(m) => eprintln!("ct: {m}"), Err(e) => fail(&format!("uninstall failed: {e}")) },
         other => {

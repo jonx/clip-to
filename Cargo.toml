@@ -27,6 +27,8 @@ codegen-units = 1
 strip = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10.1"
+core-graphics = "0.25.0"
 objc2 = "0.6.4"
 objc2-app-kit = { version = "0.3.2", features = ["NSPasteboard", "NSAttributedString", "NSApplication", "NSResponder", "NSRunningApplication", "NSMenu", "NSMenuItem", "NSMenuItemBadge", "NSFont", "NSColor", "NSWorkspace"] }
 objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArray", "NSDictionary", "NSRange", "NSAttributedString", "NSError", "NSObject", "NSEnumerator"] }
@@ -34,4 +36,4 @@ objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArr
 [target.'cfg(target_os = "windows")'.dependencies]
 clipboard-win = "5.4.1"
 winreg = "0.56.0"
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_DataExchange", "Win32_System_Console"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_DataExchange", "Win32_System_Console", "Win32_UI_Input_KeyboardAndMouse"] }

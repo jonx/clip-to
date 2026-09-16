@@ -113,6 +113,8 @@ name = "clip-to"
 version = "2.0.0"
 dependencies = [
  "clipboard-win",
+ "core-foundation",
+ "core-graphics",
  "global-hotkey",
  "htmd",
  "muda",

@@ -49,7 +49,8 @@ Output is colored when writing to a terminal. Set `NO_COLOR` to disable.
 ```
 ct daemon                            tray icon + global hotkey, stays in the foreground
 ct daemon --hotkey ctrl+shift+f9     pick another combination
-ct install [--hotkey ...]            start the daemon now and at every login
+ct daemon --no-paste                 only convert the clipboard, do not paste the result
+ct install [--hotkey ...] [--no-paste]   start the daemon now and at every login
 ct uninstall                         stop it and remove it from login
 ```
 
@@ -58,6 +59,11 @@ pops up a menu at the mouse pointer that shows which flavors are on the clipboar
 HTML, RTF), a preview, and the target formats: Rich text, Markdown, Plain text, HTML source,
 Text only. The same menu is available from the clipboard icon in the menu bar / tray, with Quit.
 A short "✓ Rich text" confirmation appears next to the icon after each conversion.
+
+Picking a format from the hotkey popup converts the clipboard, gives focus back to the app you
+were in, and pastes the result there (⌘V on macOS, Ctrl+V on Windows). On macOS this needs the
+Accessibility permission for `ct`; the system asks the first time. Use `--no-paste` to only
+convert and paste yourself.
 
 Hotkey names: `ctrl`, `alt`, `shift`, `super` (Cmd on macOS, Win on Windows), letters, digits,
 `f1`..`f12`, `space`, `enter`, `tab`, `escape`, joined with `+`.

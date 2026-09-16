@@ -21,10 +21,11 @@ mod imp {
     fn domain() -> String { format!("gui/{}", unsafe { libc_getuid() }) }
     extern "C" { #[link_name = "getuid"] fn libc_getuid() -> u32; }
 
-    pub fn install(hotkey: Option<&str>) -> Result<String, String> {
+    pub fn install(hotkey: Option<&str>, no_paste: bool) -> Result<String, String> {
         let exe = exe()?;
         let mut args = vec![exe.to_string_lossy().to_string(), "daemon".into()];
         if let Some(h) = hotkey { args.push("--hotkey".into()); args.push(h.into()); }
+        if no_paste { args.push("--no-paste".into()); }
         let items: String = args.iter().map(|a| format!("    <string>{}</string>\n", a.replace('&', "&amp;").replace('<', "&lt;"))).collect();
         let plist = format!(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
@@ -59,14 +60,16 @@ mod imp {
     const RUN: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
     const NAME: &str = "ClipTo";
 
-    pub fn install(hotkey: Option<&str>) -> Result<String, String> {
+    pub fn install(hotkey: Option<&str>, no_paste: bool) -> Result<String, String> {
         let exe = exe()?;
         let mut cmd = format!("\"{}\" daemon", exe.to_string_lossy().trim_start_matches(r"\\?\"));
         if let Some(h) = hotkey { cmd.push_str(&format!(" --hotkey {h}")); }
+        if no_paste { cmd.push_str(" --no-paste"); }
         let (key, _) = RegKey::predef(HKEY_CURRENT_USER).create_subkey(RUN).map_err(|e| e.to_string())?;
         key.set_value(NAME, &cmd).map_err(|e| e.to_string())?;
         let mut args = vec!["daemon".to_string()];
         if let Some(h) = hotkey { args.push("--hotkey".into()); args.push(h.into()); }
+        if no_paste { args.push("--no-paste".into()); }
         std::process::Command::new(&exe).args(&args).spawn().map_err(|e| e.to_string())?;
         Ok(format!("daemon started and registered in HKCU\\...\\Run as {NAME}. It will start at login."))
     }
@@ -82,7 +85,7 @@ mod imp {
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 mod imp {
-    pub fn install(_hotkey: Option<&str>) -> Result<String, String> { Err("autostart is not implemented on this platform yet".into()) }
+    pub fn install(_hotkey: Option<&str>, _no_paste: bool) -> Result<String, String> { Err("autostart is not implemented on this platform yet".into()) }
     pub fn uninstall() -> Result<String, String> { Err("autostart is not implemented on this platform yet".into()) }
 }
 

@@ -141,7 +141,7 @@ fn show_popup(menu: &Menu, window: &Window) {
     clipboard::restore_previous_app(previous);
 }
 
-pub fn run(hotkey_spec: &str) -> ! {
+pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
     let hotkey = match parse_hotkey(hotkey_spec) {
         Ok(h) => h,
         Err(e) => { eprintln!("ct: {e}"); std::process::exit(2); }
@@ -175,11 +175,15 @@ pub fn run(hotkey_spec: &str) -> ! {
         .build()
         .expect("tray icon");
 
-    eprintln!("ct: resident, press {desc} to convert the clipboard. Ctrl-C or Quit in the menu to stop.");
+    eprintln!("ct: resident, press {desc} to convert the clipboard{}. Ctrl-C or Quit in the menu to stop.", if auto_paste { " and paste the result" } else { "" });
+    if auto_paste && !crate::paste::trusted(false) {
+        eprintln!("ct: pasting needs the Accessibility permission; macOS will ask on first use (System Settings > Privacy & Security > Accessibility).");
+    }
 
     let mut last_change = clipboard::change_count();
     let mut flash_until: Option<Instant> = None;
     let mut popup: Option<(Menu, Ids)> = None;
+    let mut from_popup = false;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(250));
@@ -190,6 +194,7 @@ pub fn run(hotkey_spec: &str) -> ! {
                 let built = build_menu(&desc, false);
                 show_popup(&built.0, &window);
                 popup = Some(built);
+                from_popup = true;
             }
         }
 
@@ -203,12 +208,20 @@ pub fn run(hotkey_spec: &str) -> ! {
                     Some(src) => {
                         let out = convert::convert(&src, t);
                         match clipboard::write(&out.items, !t.replaces_all()) {
-                            Ok(()) => tray.set_title(Some(format!(" ✓ {}", t.title()))),
+                            Ok(()) => {
+                                tray.set_title(Some(format!(" ✓ {}", t.title())));
+                                if auto_paste && from_popup {
+                                    // Focus went back to the previous app when the menu closed; give it a beat.
+                                    std::thread::sleep(Duration::from_millis(120));
+                                    if let Err(e) = crate::paste::paste() { eprintln!("ct: {e}"); tray.set_title(Some(" ✗ paste")); }
+                                }
+                            }
                             Err(e) => tray.set_title(Some(format!(" ✗ {e}"))),
                         }
                     }
                 }
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
+                from_popup = false;
             } else if id == "about" {
                 let _ = open_url(ABOUT_URL);
             } else if id == "quit" {
