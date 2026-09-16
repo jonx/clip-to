@@ -1,0 +1,11 @@
+{
+  "/Users/aros/clip-to/Sources/ct/Clipboard.swift" : {
+    "abi-baseline-json" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct.abi.json",
+    "const-values" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.swiftconstvalues",
+    "dependencies" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.d",
+    "diagnostics" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.dia",
+    "swiftdoc" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct.swiftdoc",
+    "swiftmodule" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct.swiftmodule",
+    "swiftsourceinfo" : "/Users/aros/clip-to/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct.swiftsourceinfo"
+  }
+}

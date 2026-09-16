@@ -1,0 +1,41 @@
+{
+  "" : {
+    "const-values" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.swiftconstvalues",
+    "dependencies" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.d",
+    "diagnostics" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.dia",
+    "emit-module-dependencies" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary-emit-module.dia",
+    "pch" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/ct-primary.swiftdeps"
+  },
+  "/Users/aros/ClipTo/Sources/ct/Clipboard.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Clipboard.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Clipboard.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Clipboard.o"
+  },
+  "/Users/aros/ClipTo/Sources/ct/Daemon.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Daemon.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Daemon.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Daemon.o"
+  },
+  "/Users/aros/ClipTo/Sources/ct/Markdown.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Markdown.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Markdown.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Markdown.o"
+  },
+  "/Users/aros/ClipTo/Sources/ct/RichText.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/RichText.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/RichText.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/RichText.o"
+  },
+  "/Users/aros/ClipTo/Sources/ct/Terminal.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Terminal.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Terminal.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/Terminal.o"
+  },
+  "/Users/aros/ClipTo/Sources/ct/main.swift" : {
+    "index-unit-output-path" : "/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/main.o",
+    "llvm-bc" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/main.bc",
+    "object" : "/Users/aros/ClipTo/.build/out/Intermediates.noindex/ClipTo.build/Release/ct-p.build/Objects-normal/arm64/main.o"
+  }
+}

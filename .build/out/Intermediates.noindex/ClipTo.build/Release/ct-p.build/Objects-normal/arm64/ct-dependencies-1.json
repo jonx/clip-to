@@ -1,0 +1,633 @@
+[
+  {
+    "isFramework" : true,
+    "moduleName" : "Accessibility",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Accessibility-31ZQ271GGTETK.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "AppKit",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/AppKit-220ZBF6J94XT0.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "ColorSync",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ColorSync-302TKCL7HA56S.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "Combine",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Combine-1PXE8VLXSNIQR.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "CoreData",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreData-82AP7AWZYVIV.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "CoreFoundation",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreFoundation-1FB2TMXDW46LZ.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "CoreGraphics",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreGraphics-1NK1QGJR63ICL.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "CoreImage",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreImage-KQADIKXWDS8Z.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "CoreText",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreText-22B778FKK0444.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "CoreTransferable",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreTransferable-3VARW6HPNMG5L.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "CoreVideo",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreVideo-3U6FRI0FLFLF9.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Darwin",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Darwin-308T6J3LQPVSI.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "DataDetection",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/DataDetection-39LLDVWUIHK7E.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "DeveloperToolsSupport",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/DeveloperToolsSupport-QEC4PXY1W90M.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Dispatch",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Dispatch-1PQVC1BI9ZIT4.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "Foundation",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Foundation-CXQ0S2ZW4B1P.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "IOKit",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/IOKit-T58MNSOUQN10.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "ImageIO",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ImageIO-2US6LQVVD8F2H.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Metal",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Metal-2POL91DWH71AW.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "OSLog",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/OSLog-1Y8NV4H8P23I6.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "ObjectiveC",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ObjectiveC-1SJGNTQLQYHFO.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Observation",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Observation-M7R3P43HW7F8.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "QuartzCore",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/QuartzCore-3STRFWNS89HUA.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Spatial",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Spatial-7AWCJD0IAP79.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "Swift",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Swift-2ZKUHQSNI5OVD.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "SwiftUICore",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/SwiftUICore-2DPAZY278RO16.swiftmodule"
+  },
+  {
+    "isFramework" : true,
+    "moduleName" : "Symbols",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Symbols-26ZVO4IM64LV5.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "System",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/System-3ASBA6FG8LD81.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "UniformTypeIdentifiers",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/UniformTypeIdentifiers-1BNGPT01PGLLC.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "XPC",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/XPC-MI53L98DN45S.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_Builtin_float",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_float-HEHASUDVENK.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_Concurrency",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Concurrency-GQ8FE2TN8T3U.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation1",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation1-2IMTRG7ZFVFLO.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation2",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation2-2T4AYMKBT1CHW.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation3",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation3-2XGSJZ130DO72.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "_StringProcessing",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_StringProcessing-1NNM62WQCSLA.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "os",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/os-3KWGR9KNEJ628.swiftmodule"
+  },
+  {
+    "isFramework" : false,
+    "moduleName" : "simd",
+    "modulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/simd-3BLPEOSXQ9GP.swiftmodule"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Accessibility.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Accessibility-W6GK5GQ99XH7NVNK9HECA6.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Accessibility"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/AppKit.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/AppKit-8EM6P7756XHZ6249OE43MIOEF.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "AppKit"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/ApplicationServices.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ApplicationServices-8ODLJRCKY2PLCX7TMIEU81Y71.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ApplicationServices"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CFNetwork.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CFNetwork-3TMD3YMMNV4M2K25VK2HSZGQ5.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CFNetwork"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/cups.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CUPS-16XS1KESBIADUXJSGZXWT8LS5.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CUPS"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Carbon.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Carbon-7CAD0O8SR5WTFTCAVZ6E302JC.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Carbon"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/ColorSync.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ColorSync-AOM3F30PA2QBM5ECA47DKXJKY.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ColorSync"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreData.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreData-188YXPIHWB9GSF7FZ7FHJFA3H.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreData"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreFoundation.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreFoundation-B525OBHJPCM6HYVDJIGO6XCIV.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreFoundation"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreGraphics.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreGraphics-8BAPAE53M7LHZOR7UFHQPYIMP.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreGraphics"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreImage.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreImage-EA5D2HG81XE02CS569R91GJZA.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreImage"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreServices.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreServices-BA3KB66AUJDUD2ASMXAN4T17Q.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreServices"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreText.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreText-8AYPCEU5UGK06U4UBDT4U9A8L.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreText"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreTransferable.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreTransferable-BH3YFIE7LCIVEHWXF13I4B370.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreTransferable"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/CoreVideo.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/CoreVideo-4GGHADOSRV5BKHZO59LYQHKFH.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "CoreVideo"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/Darwin.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Darwin-A1R1LGFGNRKBC37MT0BNXG3D1.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Darwin"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/DataDetection.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/DataDetection-7IPEC6TYXHK9B8AT3XQTOIPKC.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "DataDetection"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/DeveloperToolsSupport.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/DeveloperToolsSupport-78XRW56QQ6FZN67NTO0PXQIAA.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "DeveloperToolsSupport"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/DiskArbitration.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/DiskArbitration-E6E0OI99IF8ZLJGLG6ESNI88G.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "DiskArbitration"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/dispatch.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Dispatch-26Z71YHQJB3L2KZI68EAPVMKD.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Dispatch"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Foundation.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Foundation-E85RO0GY9VE047EXKBY2VZCU3.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Foundation"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/IOKit.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/IOKit-496LUAARGUZE1DNMI7V2PQZ3E.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "IOKit"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/IOSurface.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/IOSurface-6QTW5930P0NYUZ6SH1Q96X23L.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "IOSurface"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/ImageIO.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ImageIO-DIGUVXY8R0HHQ292YNCUJLOGN.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ImageIO"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinBasic.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/MachO-2E6RPQAEUDEYV34RX0M8DULCV.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "MachO"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Metal.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Metal-8SZNSFQ1N8I6C104U2C1PZXOP.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Metal"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/OSLog.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/OSLog-CMDABEO7GN0KCBMG0BT95YDJ.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "OSLog"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/ObjectiveC.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ObjectiveC-3M4FCBM91B4B2I6HE4YM8VDLO.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ObjectiveC"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/OpenGL.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/OpenGL-4CIC4Q8DUD8Q7GME4Z6BJWQW3.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "OpenGL"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/QuartzCore.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/QuartzCore-B93MZYR8C182Y9QOU9S0UYJSR.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "QuartzCore"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Security.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Security-C03Q5U1QFQUDN6ABUBKC0ZJBN.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Security"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/Spatial\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Spatial-8GK6VWBCSUE7XB9AFPUX0TXOT.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Spatial"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/lib\/swift\/shims\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/SwiftShims-72PTG8RYNXRMBW283H5RZHTJN.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "SwiftShims"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/SwiftUICore.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/SwiftUICore-4YQRYFPS47E6OWK6HF9694JLK.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "SwiftUICore"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/Symbols.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/Symbols-89F0UHWBRDEX2YKS82YC1HUCG.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "Symbols"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/System\/Library\/Frameworks\/UniformTypeIdentifiers.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/UniformTypeIdentifiers-BH1V7WQVL5RT4B1CA23PQW9QG.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "UniformTypeIdentifiers"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/xpc.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/XPC-CF2E58HBU58R13P0QYTWAEOCX.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "XPC"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinFoundation1.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_AvailabilityInternal-6RPXF3H5RAMNO3H3NULKU3U09.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_AvailabilityInternal"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_float-BUMFUODU497PMC7AX2LLXGIZ8.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_float"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_intrinsics-D7YXUD44U1O8MLTFMN8I5ZZVS.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_intrinsics"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_inttypes-73FVLIBE4EZ9KAAMSMRUSONS4.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_inttypes"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_limits-EQUT2QOJYCVL9N44F7AIRJXR2.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_limits"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_stdarg-5OCRIRJZY7FQHJTJ1UBKUWIUY.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_stdarg"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_stdatomic-2Z76GJ5Q35GJ3WN2SO5NP7278.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_stdatomic"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_stdbool-AQ7C9J1UTMANGR8XN434ZOG7U.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_stdbool"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_stddef-EQWQP3XN9C6VD45XNZWZDDKRQ.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_stddef"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_stdint-2Q5SZM664IT3MYMWXPJVWCXNA.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_stdint"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_Builtin_tgmath-B69T645HRL7QNVNYGP9YXMZCJ.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_Builtin_tgmath"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinFoundation1.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation1-BE3AKHBZHKCQ6EGO9F59BJWRB.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation1"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinFoundation2.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation2-BB6E7TDXDO6GO638S85D6BK0G.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation2"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinFoundation3.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_DarwinFoundation3-82TOMJT34LHVIRXP0OX7DREC8.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_DarwinFoundation3"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/lib\/swift\/shims\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/_SwiftConcurrencyShims-CEZTMUBA2SCM8NTNCS5LUXHMM.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "_SwiftConcurrencyShims"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/launch.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/launch-SUL0Z03QTO75P6Q4F7O4VOM4.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "launch"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/libDER\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/libDER-7I9EV0HY1BTQGPDBOKTBH0O1E.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "libDER"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/libkern.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/libkern-8HULBCOD58J6EV2LGPLMPKKD9.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "libkern"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/os.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/os-1RCJ7WAB4NVP40O4FQCT5NQ7Q.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "os"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/os.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/os_object-6YZZ2LXFCGAO7GY9V1LMMFUWI.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "os_object"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/os.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/os_workgroup-6CHYD41IX8ZO8X8CP1ZSVXYWN.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "os_workgroup"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ptrauth-82M3B8DTKGIH90UK2OY7R85LE.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ptrauth"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/usr\/lib\/clang\/21\/include\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/ptrcheck-9W5WNFS2WRHR1X7S9SNWQ2M0I.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "ptrcheck"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/simd\/module.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/simd-12RNWRTOCK8PLJP8RCDKLMQTH.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "simd"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/c_standard_library.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/string_h-8B9ZZ09BU6JIS00B0CLFQ9EUJ.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "string_h"
+  },
+  {
+    "clangModuleMapPath" : "\/Library\/Developer\/CommandLineTools\/SDKs\/MacOSX27.0.sdk\/usr\/include\/DarwinFoundation2.modulemap",
+    "clangModulePath" : "\/Users\/aros\/clip-to\/.build\/out\/SDKExplicitPrecompiledModules\/sys_types-UZQVSOWQJ0NKFJMRR1NCZBYV.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "sys_types"
+  }
+]

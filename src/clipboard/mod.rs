@@ -1,0 +1,43 @@
+//! Thin platform layer over the system clipboard: list flavors, read one, write several
+//! while optionally preserving whatever else is there.
+use crate::convert::Flavor;
+
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(target_os = "macos")]
+use macos as imp;
+
+#[cfg(target_os = "windows")]
+mod windows;
+#[cfg(target_os = "windows")]
+use windows as imp;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+mod other;
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+use other as imp;
+
+pub mod rich {
+    /// RTF -> HTML and HTML -> RTF, where the OS offers a converter (macOS). Elsewhere: None.
+    pub fn rtf_to_html(rtf: &[u8]) -> Option<String> { super::imp::rtf_to_html(rtf) }
+    pub fn html_to_rtf(html: &str) -> Option<Vec<u8>> { super::imp::html_to_rtf(html) }
+}
+
+/// Native names of every format currently on the clipboard.
+pub fn types() -> Vec<String> { imp::types() }
+
+/// Flavors we understand that are currently present.
+pub fn present() -> Vec<Flavor> { Flavor::ALL.iter().copied().filter(|f| imp::has(*f)).collect() }
+
+/// Raw bytes of one flavor (UTF-8 for text and HTML).
+pub fn read(f: Flavor) -> Option<Vec<u8>> { imp::read(f) }
+
+/// Write flavors. With `keep_others`, every format already on the clipboard that is not
+/// being replaced is preserved, so rich apps keep pasting the original formatting.
+pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), String> { imp::write(items, keep_others) }
+
+/// A counter that changes whenever the clipboard content changes.
+pub fn change_count() -> i64 { imp::change_count() }
+
+/// Bring the process to the front before showing a popup menu (macOS needs it for an accessory app).
+pub fn activate_app_for_popup() { imp::activate_app() }

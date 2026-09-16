@@ -1,21 +1,23 @@
 # ClipTo
 
-`ct` converts what is on the macOS clipboard between plain text, Markdown and rich text.
-Copy Markdown, run `ct rich`, paste into Mail or Slack with headings, bold and lists intact.
+`ct` converts what is on the clipboard between plain text, Markdown and rich text.
+Copy Markdown, run `ct rich`, paste into Mail, Slack or Outlook with headings, bold and lists intact.
 Copy a formatted web page or document, run `ct md`, paste Markdown into your editor.
 
-Single Swift executable, AppKit only, no dependencies. Works from the command line or as a
-resident menu bar tool with a global hotkey.
+One Rust binary for macOS and Windows. Works from the command line or as a resident
+tray / menu bar tool with a global hotkey.
 
 ## Install
 
 ```sh
 git clone https://github.com/jonx/clip-to.git
 cd clip-to
-make install            # builds with `swift build -c release`, installs to /opt/homebrew/bin/ct
+make install            # cargo build --release, then copies target/release/ct to /opt/homebrew/bin
 ```
 
-Use `make install PREFIX=/usr/local` for another location. Requires macOS 13 or later and Xcode command line tools.
+Use `make install PREFIX=/usr/local` for another location. On Windows, `cargo build --release`
+and put `target\release\ct.exe` somewhere on your PATH. Needs a Rust toolchain (rustup.rs);
+no other dependency.
 
 ## Command line
 
@@ -45,31 +47,54 @@ Output is colored when writing to a terminal. Set `NO_COLOR` to disable.
 ## Resident mode and hotkey
 
 ```
-ct daemon                          menu bar icon + global hotkey, stays in the foreground
-ct daemon --hotkey cmd+shift+f9    pick another combination
-ct install [--hotkey ...]          start the daemon now and at every login (LaunchAgent)
-ct uninstall                       stop it and remove the LaunchAgent
+ct daemon                            tray icon + global hotkey, stays in the foreground
+ct daemon --hotkey ctrl+shift+f9     pick another combination
+ct install [--hotkey ...]            start the daemon now and at every login
+ct uninstall                         stop it and remove it from login
 ```
 
-The default hotkey is ⌃⌥⌘V. Pressing it pops up a menu at the mouse pointer that shows which
-flavors are on the clipboard (plain text, HTML, RTF), a preview, and the target formats:
-Rich text, Markdown, Plain text, HTML source, Text only. Press 1 to 5 or click one. The same menu
-is available from the clipboard icon in the menu bar. No Accessibility permission is needed: the
-hotkey is registered through the Carbon hotkey API.
+The default hotkey is Ctrl+Alt+Cmd+V on macOS (⌃⌥⌘V) and Ctrl+Alt+Win+V on Windows. Pressing it
+pops up a menu at the mouse pointer that shows which flavors are on the clipboard (plain text,
+HTML, RTF), a preview, and the target formats: Rich text, Markdown, Plain text, HTML source,
+Text only. The same menu is available from the clipboard icon in the menu bar / tray, with Quit.
+A short "✓ Rich text" confirmation appears next to the icon after each conversion.
 
-Hotkey names: `cmd`, `ctrl`, `alt`, `shift`, letters, digits, `f1`..`f12`, `space`, `return`, `tab`, `escape`.
+Hotkey names: `ctrl`, `alt`, `shift`, `super` (Cmd on macOS, Win on Windows), letters, digits,
+`f1`..`f12`, `space`, `enter`, `tab`, `escape`, joined with `+`.
+
+Login start uses a LaunchAgent (`~/Library/LaunchAgents/me.jkn.clipto.plist`) on macOS and the
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` key on Windows. No Accessibility permission
+is needed on macOS: the hotkey goes through the Carbon hotkey API. On Windows the daemon detaches
+from its console window when it starts.
 
 ## How clipboard flavors work
 
-The macOS clipboard holds several representations of the same content at once. The copying
-app decides which ones to provide; the pasting app picks the richest one it understands.
-Terminals and code editors always take plain text. Mail, Notes, Slack, Pages, Word and browsers
-take HTML first, then RTF, then plain text. `ct` on its own tells you which flavors are present, so you
-know what a paste will do. `ct rich` writes all three from Markdown; `ct text` keeps only plain
+The clipboard holds several representations of the same content at once. The copying app decides
+which ones to provide; the pasting app picks the richest one it understands. Terminals and code
+editors always take plain text. Mail, Notes, Slack, Outlook, Word, Pages and browsers take HTML
+first, then RTF, then plain text. `ct` on its own tells you which flavors are present, so you
+know what a paste will do. `ct rich` writes all of them from Markdown; `ct text` keeps only plain
 text so every app pastes it unchanged.
 
-Limitation: RTF carries no heading level, so headings from an RTF-only source come back as bold
-paragraphs. HTML sources keep them.
+On macOS the flavors are `public.utf8-plain-text`, `public.html` and `public.rtf` on NSPasteboard.
+On Windows they are `CF_UNICODETEXT`, the registered `HTML Format` (CF_HTML, with its offset
+header) and `Rich Text Format`.
+
+## How it is built
+
+- `markdown.rs`: Markdown -> HTML with pulldown-cmark, HTML -> Markdown with htmd, Markdown ->
+  plain text by walking the parser events. Pure Rust, shared by every platform, unit-tested.
+- `clipboard/macos.rs`: NSPasteboard through objc2-app-kit, plus NSAttributedString for
+  RTF <-> HTML, so `rich` also writes RTF and RTF-only sources can be read.
+- `clipboard/windows.rs`: Win32 clipboard through clipboard-win. RTF is listed and preserved but
+  not converted (Windows has no system converter); HTML covers Word, Outlook and browsers.
+- `daemon.rs`: tao event loop, tray-icon, muda menus and global-hotkey. These crates call the
+  native APIs: NSStatusItem, NSMenu and Carbon hotkeys on macOS; Shell_NotifyIcon, TrackPopupMenu
+  and RegisterHotKey on Windows.
+- `swift/`: the original macOS-only Swift implementation, kept as the behaviour reference.
+
+Limitations: RTF carries no heading level, and reading an RTF-only clipboard flattens nested
+lists and code blocks. HTML sources keep everything. Linux has no clipboard backend yet.
 
 ## License
 

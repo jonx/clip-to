@@ -1,10 +1,13 @@
 PREFIX ?= /opt/homebrew
-BIN = .build/release/ct
+BIN = target/release/ct
 
 all: $(BIN)
 
-$(BIN): Sources/ct/*.swift Package.swift
-	swift build -c release
+$(BIN): src/*.rs src/clipboard/*.rs Cargo.toml
+	cargo build --release
+
+test:
+	cargo test --release
 
 install: $(BIN)
 	install -d $(PREFIX)/bin
@@ -13,7 +16,10 @@ install: $(BIN)
 uninstall:
 	rm -f $(PREFIX)/bin/ct
 
-clean:
-	rm -rf .build
+windows-check:
+	cargo check --release --target x86_64-pc-windows-msvc
 
-.PHONY: all install uninstall clean
+clean:
+	cargo clean
+
+.PHONY: all test install uninstall windows-check clean
