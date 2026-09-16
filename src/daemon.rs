@@ -122,7 +122,7 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
 }
 
 fn show_popup(menu: &Menu, window: &Window) {
-    clipboard::activate_app_for_popup();
+    let previous = clipboard::activate_app_for_popup();
     #[cfg(target_os = "macos")]
     unsafe {
         use tao::platform::macos::WindowExtMacOS;
@@ -137,6 +137,8 @@ fn show_popup(menu: &Menu, window: &Window) {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     { let _ = (menu, window); }
+    // The menu blocks until dismissed; hand focus back so the user's ⌘V lands where they were.
+    clipboard::restore_previous_app(previous);
 }
 
 pub fn run(hotkey_spec: &str) -> ! {

@@ -94,8 +94,27 @@ pub fn html_to_rtf(html: &str) -> Option<Vec<u8>> {
     }
 }
 
-/// Bring the process to the front so a popup menu can take key focus.
-pub fn activate_app() {
+/// Handle to the app that had focus before we showed a popup.
+pub struct PreviousApp(Retained<objc2_app_kit::NSRunningApplication>);
+
+/// Remember the frontmost app, then bring our process to the front so a popup menu can take key focus.
+pub fn activate_app() -> Option<PreviousApp> {
+    use objc2_app_kit::NSWorkspace;
+    let prev = unsafe { NSWorkspace::sharedWorkspace().frontmostApplication() }.map(PreviousApp);
+    activate_self();
+    prev
+}
+
+/// Give focus back to the app the user was in, so their next paste lands in the right field.
+pub fn restore_app(prev: Option<PreviousApp>) {
+    use objc2_app_kit::NSApplicationActivationOptions;
+    if let Some(PreviousApp(app)) = prev {
+        #[allow(deprecated)]
+        app.activateWithOptions(NSApplicationActivationOptions::ActivateIgnoringOtherApps);
+    }
+}
+
+fn activate_self() {
     use objc2::MainThreadMarker;
     use objc2_app_kit::NSApplication;
     if let Some(mtm) = MainThreadMarker::new() {

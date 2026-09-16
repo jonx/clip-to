@@ -39,5 +39,9 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
 /// A counter that changes whenever the clipboard content changes.
 pub fn change_count() -> i64 { imp::change_count() }
 
-/// Bring the process to the front before showing a popup menu (macOS needs it for an accessory app).
-pub fn activate_app_for_popup() { imp::activate_app() }
+pub use imp::PreviousApp;
+/// Bring the process to the front before showing a popup menu (macOS needs it for an accessory
+/// app) and remember who had focus.
+pub fn activate_app_for_popup() -> Option<PreviousApp> { imp::activate_app() }
+/// Return focus to the previously active app once the popup is gone.
+pub fn restore_previous_app(prev: Option<PreviousApp>) { imp::restore_app(prev) }
