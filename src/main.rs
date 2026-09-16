@@ -60,6 +60,13 @@ fn fail(msg: &str) -> ! {
 }
 
 fn main() {
+    // Behave like other CLI tools when the reader goes away (`ct | head`): exit quietly instead of panicking.
+    #[cfg(unix)]
+    unsafe {
+        extern "C" { fn signal(sig: i32, handler: usize) -> usize; }
+        const SIGPIPE: i32 = 13;
+        signal(SIGPIPE, 0);
+    }
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mut infile: Option<String> = None;
     let mut to_stdout = false;
