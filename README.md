@@ -23,15 +23,21 @@ Use `make install PREFIX=/usr/local` for another location. Requires macOS 13 or 
 ct                 help plus what is on the clipboard right now (previews cut at 600 characters)
 
 ct rich            Markdown -> rich text (HTML + RTF + plain). Pasting keeps formatting
-ct md              rich text (HTML/RTF) -> Markdown source
+ct md              rich text (HTML/RTF) -> Markdown source, in the plain-text flavor
 ct plain           Markdown or rich text -> plain text, syntax stripped, bullets as "•"
-ct html            Markdown -> HTML source, as plain text
+ct html            Markdown -> HTML source, in the plain-text flavor
 ct text            keep only the plain-text flavor (drop HTML/RTF)
 
 -i FILE            read FILE ('-' = stdin) instead of the clipboard
 -o                 print the result instead of writing the clipboard
 -p                 print the result after writing the clipboard
+-x                 exclusive: drop the other flavors
 ```
+
+`md`, `plain` and `html` are non-destructive: they only replace the plain-text flavor and keep
+HTML and RTF, so Mail or Slack still paste the original formatting while a terminal or editor gets
+the converted text. Add `-x` to drop the other flavors. `rich` rebuilds all flavors from Markdown,
+and `text` keeps plain text only.
 
 Commands can be shortened to their first letter: `ct r`, `ct m`, `ct p`, `ct h`, `ct t`, `ct d`, `ct i`, `ct u`.
 Output is colored when writing to a terminal. Set `NO_COLOR` to disable.

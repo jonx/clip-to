@@ -17,10 +17,12 @@ func printHelp() {
         ("-i FILE", "read FILE ('-' = stdin) instead of the clipboard"),
         ("-o", "print the result instead of writing the clipboard"),
         ("-p", "print the result after writing the clipboard"),
+        ("-x", "exclusive: drop the other flavors (md, plain, html keep HTML/RTF by default)"),
         ("--hotkey K", "daemon/install: key combo, e.g. ctrl+alt+cmd+v, cmd+shift+f9"),
     ]
     for (k, v) in opts { print("  " + T.yellow(k.padding(toLength: 10, withPad: " ", startingAt: 0)) + "  " + v) }
     print()
+    print(T.dim("md, plain and html only update the plain-text flavor and keep HTML/RTF, so rich apps still paste the original formatting."))
     print(T.dim("Commands can be abbreviated to their first letter: ct r, ct m, ct p, ct h, ct t, ct d, ct i, ct u."))
     print(T.dim("Without a command, ct prints this help and what is on the clipboard (previews cut at 600 characters)."))
     print(T.dim("Example: copy some Markdown, run `ct rich`, paste into Mail or Slack."))
@@ -44,6 +46,7 @@ func printShow() {
 var infile: String? = nil
 var toStdout = false
 var alsoPrint = false
+var exclusive = false
 var hotkeySpec: String? = nil
 var positional: [String] = []
 let args = Array(CommandLine.arguments.dropFirst())
@@ -54,6 +57,7 @@ while idx < args.count {
     case "-i": idx += 1; infile = idx < args.count ? args[idx] : "-"
     case "-o": toStdout = true
     case "-p": alsoPrint = true
+    case "-x": exclusive = true
     case "--hotkey": idx += 1; hotkeySpec = idx < args.count ? args[idx] : nil
     case "-h", "--help", "help": printHelp(); exit(0)
     case "-v", "--version": print("ct \(version)"); exit(0)
@@ -108,9 +112,11 @@ default:
     if toStdout {
         Term.stdout(result)
     } else {
-        Clipboard.write(items)
-        let names = items.map { $0.0.rawValue }.joined(separator: ", ")
-        Term.stderr(Term.c("32", "✓", on: Term.errColor) + " clipboard: " + Term.c("36", names, on: Term.errColor))
+        let keep = !exclusive && !target.replacesAll
+        Clipboard.write(items, keepOthers: keep)
+        let names = Clipboard.present.map { $0.label }.joined(separator: ", ")
+        let note = keep && Clipboard.present.count > 1 ? Term.dim("  (other flavors kept, -x to drop them)") : ""
+        Term.stderr(Term.c("32", "✓", on: Term.errColor) + " clipboard: " + Term.c("36", names, on: Term.errColor) + note)
         if alsoPrint { Term.stdout(result) }
     }
 }

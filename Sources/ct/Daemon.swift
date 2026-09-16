@@ -81,7 +81,7 @@ final class Daemon: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard let raw = sender.representedObject as? String, let target = Target(rawValue: raw) else { return }
         guard let src = Clipboard.read(prefer: target.prefer) else { flash("✗ empty"); return }
         let (_, items) = Clipboard.convert(src, to: target)
-        Clipboard.write(items)
+        Clipboard.write(items, keepOthers: !target.replacesAll)
         flash("✓ " + target.title)
     }
 

@@ -59,10 +59,18 @@ enum Target: String, CaseIterable {
     var help: String {
         switch self {
         case .rich: return "Markdown -> rich text (HTML + RTF + plain). Pasting keeps headings, bold, lists, code"
-        case .md: return "rich text (HTML/RTF copied from a page or a document) -> Markdown source"
-        case .plain: return "Markdown or rich text -> plain text, syntax stripped, bullets as \"•\""
-        case .html: return "Markdown -> HTML source, as plain text"
+        case .md: return "rich text (HTML/RTF copied from a page or a document) -> Markdown source in the text flavor"
+        case .plain: return "Markdown or rich text -> plain text in the text flavor, syntax stripped, bullets as \"•\""
+        case .html: return "Markdown -> HTML source in the text flavor"
         case .text: return "keep only the plain-text flavor (drop HTML/RTF)"
+        }
+    }
+    /// Whether the conversion replaces the whole clipboard by default. Text-producing
+    /// conversions only update the plain-text flavor and keep HTML/RTF, unless forced.
+    var replacesAll: Bool {
+        switch self {
+        case .rich, .text: return true
+        case .md, .plain, .html: return false
         }
     }
     /// Which clipboard flavors to try first.
@@ -91,10 +99,19 @@ enum Clipboard {
         return nil
     }
 
-    static func write(_ items: [(NSPasteboard.PasteboardType, Data)]) {
+    /// Write flavors. With `keepOthers`, every flavor already on the clipboard that is not being
+    /// replaced is preserved, so rich apps keep pasting the original formatting.
+    static func write(_ items: [(NSPasteboard.PasteboardType, Data)], keepOthers: Bool) {
+        var all = items
+        if keepOthers {
+            let written = Set(items.map { $0.0 })
+            for t in pb.types ?? [] where !written.contains(t) {
+                if let d = pb.data(forType: t) { all.append((t, d)) }
+            }
+        }
         pb.clearContents()
-        pb.declareTypes(items.map { $0.0 }, owner: nil)
-        for (t, d) in items { pb.setData(d, forType: t) }
+        pb.declareTypes(all.map { $0.0 }, owner: nil)
+        for (t, d) in all { pb.setData(d, forType: t) }
     }
 
     /// Convert a source to a target. Returns the textual result and the flavors to put on the clipboard.
