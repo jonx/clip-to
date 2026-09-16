@@ -111,7 +111,13 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     if resident {
         let _ = menu.append(&PredefinedMenuItem::separator());
         let _ = menu.append(&MenuItem::new(format!("Hotkey: {hotkey_desc}"), false, None));
-        let _ = menu.append(&MenuItem::with_id("about", "ClipTo — John Knipper, jkn.me", true, None));
+        if cfg!(target_os = "macos") {
+            let ok = crate::paste::trusted(false);
+            let label = if ok { "Accessibility: granted (needed to paste)" } else { "Accessibility: not granted — open Settings…" };
+            let _ = menu.append(&MenuItem::with_id("accessibility", label, true, None));
+        }
+        let _ = menu.append(&PredefinedMenuItem::separator());
+        let _ = menu.append(&MenuItem::with_id("about", format!("ClipTo {} — John Knipper, jkn.me", crate::VERSION), true, None));
         let _ = menu.append(&MenuItem::with_id("quit", "Quit ct", true, None));
     }
     #[cfg(target_os = "macos")]
@@ -224,6 +230,8 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 from_popup = false;
             } else if id == "about" {
                 let _ = open_url(ABOUT_URL);
+            } else if id == "accessibility" {
+                let _ = open_url("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility");
             } else if id == "quit" {
                 *control_flow = ControlFlow::Exit;
             }
