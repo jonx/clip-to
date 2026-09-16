@@ -100,7 +100,7 @@ pub struct PreviousApp(Retained<objc2_app_kit::NSRunningApplication>);
 /// Remember the frontmost app, then bring our process to the front so a popup menu can take key focus.
 pub fn activate_app() -> Option<PreviousApp> {
     use objc2_app_kit::NSWorkspace;
-    let prev = unsafe { NSWorkspace::sharedWorkspace().frontmostApplication() }.map(PreviousApp);
+    let prev = NSWorkspace::sharedWorkspace().frontmostApplication().map(PreviousApp);
     activate_self();
     prev
 }
