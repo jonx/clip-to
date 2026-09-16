@@ -1,11 +1,14 @@
 //! ct — ClipTo: convert the clipboard between plain text, Markdown and rich text.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 mod autostart;
 mod clipboard;
 mod convert;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 mod daemon;
 #[cfg(target_os = "macos")]
 mod macos_menu;
 mod markdown;
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 mod paste;
 mod term;
 
@@ -25,8 +28,11 @@ fn print_help() {
         let name = format!("{}/{}", t.name(), &t.name()[..1]);
         println!("  {}  {}", term::green(&pad(&name, 11)), t.help());
     }
-    println!("  {}  tray icon + hotkey ({}) with a format chooser that pastes the result", term::green(&pad("daemon/d", 11)), daemon::describe(daemon::DEFAULT_HOTKEY));
-    println!("  {}  run the daemon now and at login; {} removes it", term::green(&pad("install/i", 11)), term::green("uninstall/u"));
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    {
+        println!("  {}  tray icon + hotkey ({}) with a format chooser that pastes the result", term::green(&pad("daemon/d", 11)), daemon::describe(daemon::DEFAULT_HOTKEY));
+        println!("  {}  run the daemon now and at login; {} removes it", term::green(&pad("install/i", 11)), term::green("uninstall/u"));
+    }
     println!();
     println!("{}", term::bold("Options"));
     for (k, v) in [
@@ -35,6 +41,9 @@ fn print_help() {
         ("-p", "print the result after writing the clipboard"),
         ("-x", "drop the other flavors (md, plain, html keep HTML/RTF)"),
         ("-f", "convert even if the clipboard already holds the requested format"),
+    ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    for (k, v) in [
         ("--hotkey K", "daemon/install: e.g. ctrl+alt+super+v, ctrl+shift+f9"),
         ("--no-paste", "daemon/install: convert only, do not paste"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
@@ -73,7 +82,9 @@ fn main() {
     let mut also_print = false;
     let mut exclusive = false;
     let mut force = false;
+    #[allow(unused_variables, unused_assignments)]
     let mut hotkey: Option<String> = None;
+    #[allow(unused_variables, unused_assignments)]
     let mut no_paste = false;
     let mut positional: Vec<String> = Vec::new();
     let mut i = 0;
@@ -93,16 +104,22 @@ fn main() {
         i += 1;
     }
     let cmd = positional.first().map(String::as_str).unwrap_or("");
-    let hotkey_spec = hotkey.clone().unwrap_or_else(|| daemon::DEFAULT_HOTKEY.to_string());
 
     match cmd {
         "" => { print_help(); println!(); print_clipboard(); }
-        "daemon" | "d" => daemon::run(&hotkey_spec, !no_paste),
+        #[cfg(target_os = "linux")]
+        "__serve" => clipboard::serve(),
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
+        "daemon" | "d" => daemon::run(&hotkey.clone().unwrap_or_else(|| daemon::DEFAULT_HOTKEY.to_string()), !no_paste),
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         "install" | "i" => {
-            if let Err(e) = daemon::parse_hotkey(&hotkey_spec) { fail(&e); }
+            if let Some(h) = &hotkey { if let Err(e) = daemon::parse_hotkey(h) { fail(&e); } }
             match autostart::install(hotkey.as_deref(), no_paste) { Ok(m) => eprintln!("ct: {m}"), Err(e) => fail(&format!("install failed: {e}")) }
         }
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         "uninstall" | "u" => match autostart::uninstall() { Ok(m) => eprintln!("ct: {m}"), Err(e) => fail(&format!("uninstall failed: {e}")) },
+        #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+        "daemon" | "d" | "install" | "i" | "uninstall" | "u" => fail("resident mode is not available on this platform; use the command line"),
         other => {
             let Some(target) = Target::parse(other) else {
                 eprintln!("{} unknown command '{other}'\n", term::err_red("ct:"));

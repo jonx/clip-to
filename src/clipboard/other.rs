@@ -6,9 +6,5 @@ pub fn read(_f: Flavor) -> Option<Vec<u8>> { None }
 pub fn write(_items: &[(Flavor, Vec<u8>)], _keep_others: bool) -> Result<(), String> {
     Err("clipboard access is not implemented on this platform yet".into())
 }
-pub fn change_count() -> i64 { 0 }
 pub fn rtf_to_html(_rtf: &[u8]) -> Option<String> { None }
 pub fn html_to_rtf(_html: &str) -> Option<Vec<u8>> { None }
-pub struct PreviousApp;
-pub fn activate_app() -> Option<PreviousApp> { None }
-pub fn restore_app(_p: Option<PreviousApp>) {}

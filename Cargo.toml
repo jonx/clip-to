@@ -13,10 +13,13 @@ name = "ct"
 path = "src/main.rs"
 
 [dependencies]
-global-hotkey = "0.8.0"
 htmd = "0.5.5"
-muda = "0.20.0"
 pulldown-cmark = "0.13.4"
+
+# Resident mode (tray icon, global hotkey, popup) exists on macOS and Windows only.
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+global-hotkey = "0.8.0"
+muda = "0.20.0"
 tao = "0.37.0"
 tray-icon = { version = "0.25.0", default-features = false }
 
@@ -37,3 +40,6 @@ objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArr
 clipboard-win = "5.4.1"
 winreg = "0.56.0"
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_DataExchange", "Win32_System_Console", "Win32_UI_Input_KeyboardAndMouse"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+arboard = { version = "3.6.1", features = ["wayland-data-control"] }

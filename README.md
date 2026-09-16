@@ -4,8 +4,8 @@
 Copy Markdown, run `ct rich`, paste into Mail, Slack or Outlook with headings, bold and lists intact.
 Copy a formatted web page or document, run `ct md`, paste Markdown into your editor.
 
-One Rust binary for macOS and Windows. Works from the command line or as a resident
-tray / menu bar tool with a global hotkey.
+One Rust binary for macOS, Windows and Linux. Works from the command line everywhere, and as a
+resident tray / menu bar tool with a global hotkey on macOS and Windows.
 
 ## Install
 
@@ -16,8 +16,8 @@ make install            # cargo build --release, then copies target/release/ct t
 ```
 
 Use `make install PREFIX=/usr/local` for another location. On Windows, `cargo build --release`
-and put `target\release\ct.exe` somewhere on your PATH. Needs a Rust toolchain (rustup.rs);
-no other dependency.
+and put `target\release\ct.exe` somewhere on your PATH. On Linux, `make install PREFIX=~/.local`.
+Needs a Rust toolchain (rustup.rs); no other dependency.
 
 ## Command line
 
@@ -105,13 +105,17 @@ header) and `Rich Text Format`.
   RTF <-> HTML, so `rich` also writes RTF and RTF-only sources can be read.
 - `clipboard/windows.rs`: Win32 clipboard through clipboard-win. RTF is listed and preserved but
   not converted (Windows has no system converter); HTML covers Word, Outlook and browsers.
+- `clipboard/linux.rs`: X11 and Wayland through arboard, text and HTML. Because a Linux clipboard
+  is served by the copying process, `ct` leaves a small background copy of itself (`ct __serve`)
+  offering the content until another app takes the clipboard over. Command line only: no tray,
+  no hotkey, no auto-paste, no RTF, no private Markdown flavor (the Markdown heuristic applies).
 - `daemon.rs`: tao event loop, tray-icon, muda menus and global-hotkey. These crates call the
   native APIs: NSStatusItem, NSMenu and Carbon hotkeys on macOS; Shell_NotifyIcon, TrackPopupMenu
   and RegisterHotKey on Windows.
 - `swift/`: the original macOS-only Swift implementation, kept as the behaviour reference.
 
 Limitations: RTF carries no heading level, and reading an RTF-only clipboard flattens nested
-lists and code blocks. HTML sources keep everything. Linux has no clipboard backend yet.
+lists and code blocks. HTML sources keep everything.
 
 ## License
 

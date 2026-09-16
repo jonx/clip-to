@@ -12,9 +12,16 @@ mod windows;
 #[cfg(target_os = "windows")]
 use windows as imp;
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
+mod linux;
+#[cfg(target_os = "linux")]
+use linux as imp;
+#[cfg(target_os = "linux")]
+pub use linux::serve;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 mod other;
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 use other as imp;
 
 pub mod rich {
@@ -36,12 +43,16 @@ pub fn read(f: Flavor) -> Option<Vec<u8>> { imp::read(f) }
 /// being replaced is preserved, so rich apps keep pasting the original formatting.
 pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), String> { imp::write(items, keep_others) }
 
-/// A counter that changes whenever the clipboard content changes.
+/// A counter that changes whenever the clipboard content changes (daemon only).
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn change_count() -> i64 { imp::change_count() }
 
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub use imp::PreviousApp;
 /// Bring the process to the front before showing a popup menu (macOS needs it for an accessory
 /// app) and remember who had focus.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn activate_app_for_popup() -> Option<PreviousApp> { imp::activate_app() }
 /// Return focus to the previously active app once the popup is gone.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn restore_previous_app(prev: Option<PreviousApp>) { imp::restore_app(prev) }
