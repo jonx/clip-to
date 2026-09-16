@@ -9,6 +9,12 @@ resident tray / menu bar tool with a global hotkey on macOS and Windows.
 
 ## Install
 
+Prebuilt binaries for macOS (Apple Silicon and Intel), Windows and Linux are on the
+[Releases page](https://github.com/jonx/clip-to/releases): unpack and put `ct` on your PATH.
+On macOS, a downloaded binary is quarantined; run `xattr -d com.apple.quarantine ct` once.
+
+Or build from source:
+
 ```sh
 git clone https://github.com/jonx/clip-to.git
 cd clip-to
