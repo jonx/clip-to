@@ -95,8 +95,8 @@ fn main() {
             "-p" => also_print = true,
             "-x" => exclusive = true,
             "-f" => force = true,
-            "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); }
-            "--no-paste" => no_paste = true,
+            "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); let _ = &hotkey; }
+            "--no-paste" => { no_paste = true; let _ = no_paste; }
             "-h" | "--help" | "help" => { print_help(); return; }
             "-v" | "--version" => { println!("ct {VERSION}"); return; }
             other => positional.push(other.to_string()),

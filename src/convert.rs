@@ -40,6 +40,7 @@ impl Target {
     pub fn name(self) -> &'static str {
         match self { Target::Rich => "rich", Target::Md => "md", Target::Plain => "plain", Target::Html => "html", Target::Text => "text" }
     }
+    #[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
     pub fn title(self) -> &'static str {
         match self { Target::Rich => "Rich text", Target::Md => "Markdown", Target::Plain => "Plain text", Target::Html => "HTML source", Target::Text => "Text only" }
     }
