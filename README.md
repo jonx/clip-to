@@ -24,11 +24,11 @@ no other dependency.
 ```
 ct                 help plus what is on the clipboard right now (previews cut at 600 characters)
 
-ct rich            Markdown -> rich text (HTML + RTF + plain). Pasting keeps formatting
-ct md              rich text (HTML/RTF) -> Markdown source, in the plain-text flavor
-ct plain           Markdown or rich text -> plain text, syntax stripped, bullets as "•"
-ct html            Markdown -> HTML source, in the plain-text flavor
-ct text            keep only the plain-text flavor (drop HTML/RTF)
+ct rich    (ct r)  Markdown -> rich text (HTML + RTF + plain). Pasting keeps formatting
+ct md      (ct m)  rich text (HTML/RTF) -> Markdown source, in the plain-text flavor
+ct plain   (ct p)  Markdown or rich text -> plain text, syntax stripped, bullets as "•"
+ct html    (ct h)  Markdown -> HTML source, in the plain-text flavor
+ct text    (ct t)  keep only the plain-text flavor (drop HTML/RTF)
 
 -i FILE            read FILE ('-' = stdin) instead of the clipboard
 -o                 print the result instead of writing the clipboard
@@ -50,7 +50,7 @@ HTML and RTF, so Mail or Slack still paste the original formatting while a termi
 the converted text. Add `-x` to drop the other flavors. `rich` rebuilds all flavors from Markdown,
 and `text` keeps plain text only.
 
-Commands can be shortened to their first letter: `ct r`, `ct m`, `ct p`, `ct h`, `ct t`, `ct d`, `ct i`, `ct u`.
+`daemon`, `install` and `uninstall` shorten to `d`, `i`, `u` as well.
 Output is colored when writing to a terminal. Set `NO_COLOR` to disable.
 
 ## Resident mode and hotkey
@@ -98,7 +98,9 @@ header) and `Rich Text Format`.
 ## How it is built
 
 - `markdown.rs`: Markdown -> HTML with pulldown-cmark, HTML -> Markdown with htmd, Markdown ->
-  plain text by walking the parser events. Pure Rust, shared by every platform, unit-tested.
+  plain text by walking the parser events. Pure Rust, shared by every platform.
+- `convert.rs`: flavors, targets, the skip rule, and conversion tests between every pair of
+  formats (Markdown, HTML, RTF on macOS, plain text), run with `cargo test`.
 - `clipboard/macos.rs`: NSPasteboard through objc2-app-kit, plus NSAttributedString for
   RTF <-> HTML, so `rich` also writes RTF and RTF-only sources can be read.
 - `clipboard/windows.rs`: Win32 clipboard through clipboard-win. RTF is listed and preserved but

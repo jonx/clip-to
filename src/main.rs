@@ -21,26 +21,23 @@ fn print_help() {
     println!("{}", term::dim("John Knipper · http://jkn.me"));
     println!();
     println!("{}", term::bold("Commands"));
-    for t in Target::ALL { println!("  {}  {}", term::green(&pad(t.name(), 9)), t.help()); }
-    println!("  {}  stay resident: tray icon + global hotkey (default {}) that pops up a format chooser and pastes the result", term::green(&pad("daemon", 9)), daemon::describe(daemon::DEFAULT_HOTKEY));
-    println!("  {}  start the daemon now and at every login; {} removes it", term::green(&pad("install", 9)), term::green("uninstall"));
+    for t in Target::ALL {
+        let name = format!("{}/{}", t.name(), &t.name()[..1]);
+        println!("  {}  {}", term::green(&pad(&name, 11)), t.help());
+    }
+    println!("  {}  tray icon + hotkey ({}) with a format chooser that pastes the result", term::green(&pad("daemon/d", 11)), daemon::describe(daemon::DEFAULT_HOTKEY));
+    println!("  {}  run the daemon now and at login; {} removes it", term::green(&pad("install/i", 11)), term::green("uninstall/u"));
     println!();
     println!("{}", term::bold("Options"));
     for (k, v) in [
         ("-i FILE", "read FILE ('-' = stdin) instead of the clipboard"),
         ("-o", "print the result instead of writing the clipboard"),
         ("-p", "print the result after writing the clipboard"),
-        ("-x", "exclusive: drop the other flavors (md, plain, html keep HTML/RTF by default)"),
-        ("-f", "force: convert even when the clipboard already holds the requested format"),
-        ("--hotkey K", "daemon/install: key combo, e.g. ctrl+alt+super+v, ctrl+shift+f9"),
-        ("--no-paste", "daemon/install: only convert the clipboard, do not paste the result into the active app"),
+        ("-x", "drop the other flavors (md, plain, html keep HTML/RTF)"),
+        ("-f", "convert even if the clipboard already holds the requested format"),
+        ("--hotkey K", "daemon/install: e.g. ctrl+alt+super+v, ctrl+shift+f9"),
+        ("--no-paste", "daemon/install: convert only, do not paste"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
-    println!();
-    println!("{}", term::dim("If the clipboard already holds the requested format (HTML present for rich, Markdown-looking text for md...), nothing is converted; -f forces it."));
-    println!("{}", term::dim("md, plain and html only update the plain-text flavor and keep HTML/RTF, so rich apps still paste the original formatting."));
-    println!("{}", term::dim("Commands can be abbreviated to their first letter: ct r, ct m, ct p, ct h, ct t, ct d, ct i, ct u."));
-    println!("{}", term::dim("Without a command, ct prints this help and what is on the clipboard (previews cut at 600 characters)."));
-    println!("{}", term::dim("Example: copy some Markdown, run `ct rich`, paste into Mail or Slack."));
 }
 
 fn print_clipboard() {
