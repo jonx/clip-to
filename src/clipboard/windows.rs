@@ -9,6 +9,7 @@ fn format_id(f: Flavor) -> Option<u32> {
         Flavor::Text => Some(formats::CF_UNICODETEXT),
         Flavor::Html => raw::register_format("HTML Format").map(NonZeroU32::get),
         Flavor::Rtf => raw::register_format("Rich Text Format").map(NonZeroU32::get),
+        Flavor::Md => raw::register_format("ClipTo Markdown").map(NonZeroU32::get),
     }
 }
 
@@ -33,7 +34,7 @@ pub fn read(f: Flavor) -> Option<Vec<u8>> {
     match f {
         Flavor::Text => raw::get_string(&mut buf).ok()?,
         Flavor::Html => raw::get_html(id, &mut buf).ok()?,
-        Flavor::Rtf => raw::get_vec(id, &mut buf).ok()?,
+        Flavor::Rtf | Flavor::Md => raw::get_vec(id, &mut buf).ok()?,
     };
     Some(buf)
 }
@@ -56,7 +57,7 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
         let r = match f {
             Flavor::Text => raw::set_string(std::str::from_utf8(d).map_err(|e| e.to_string())?),
             Flavor::Html => raw::set_html(id, std::str::from_utf8(d).map_err(|e| e.to_string())?),
-            Flavor::Rtf => raw::set(id, d),
+            Flavor::Rtf | Flavor::Md => raw::set(id, d),
         };
         r.map_err(|e| e.to_string())?;
     }

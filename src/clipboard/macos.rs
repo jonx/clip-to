@@ -8,13 +8,21 @@ use objc2_app_kit::{
     NSExcludedElementsDocumentAttribute, NSHTMLTextDocumentType, NSPasteboard, NSPasteboardType, NSPasteboardTypeHTML,
     NSPasteboardTypeRTF, NSPasteboardTypeString, NSRTFTextDocumentType,
 };
-use objc2_foundation::{NSArray, NSAttributedString, NSData, NSDictionary, NSRange, NSString};
+use objc2_foundation::{NSArray, NSAttributedString, NSCopying, NSData, NSDictionary, NSRange, NSString};
 
 fn pb() -> Retained<NSPasteboard> { NSPasteboard::generalPasteboard() }
 
-fn ns_type(f: Flavor) -> &'static NSPasteboardType {
+/// Private flavor carrying the Markdown source written by `rich`.
+pub const MARKDOWN_TYPE: &str = "me.jkn.clipto.markdown";
+
+fn ns_type(f: Flavor) -> Retained<NSPasteboardType> {
     unsafe {
-        match f { Flavor::Text => NSPasteboardTypeString, Flavor::Html => NSPasteboardTypeHTML, Flavor::Rtf => NSPasteboardTypeRTF }
+        match f {
+            Flavor::Text => NSPasteboardTypeString.copy(),
+            Flavor::Html => NSPasteboardTypeHTML.copy(),
+            Flavor::Rtf => NSPasteboardTypeRTF.copy(),
+            Flavor::Md => NSString::from_str(MARKDOWN_TYPE),
+        }
     }
 }
 
@@ -22,14 +30,14 @@ pub fn types() -> Vec<String> {
     pb().types().map(|a| a.iter().map(|t| t.to_string()).collect()).unwrap_or_default()
 }
 
-pub fn has(f: Flavor) -> bool { pb().dataForType(ns_type(f)).is_some() }
+pub fn has(f: Flavor) -> bool { pb().dataForType(&ns_type(f)).is_some() }
 
 pub fn read(f: Flavor) -> Option<Vec<u8>> {
     let p = pb();
     match f {
-        Flavor::Rtf => p.dataForType(ns_type(f)).map(|d| d.to_vec()),
+        Flavor::Rtf | Flavor::Md => p.dataForType(&ns_type(f)).map(|d| d.to_vec()),
         // Strings go through NSString so the pasteboard normalises encodings for us.
-        _ => p.stringForType(ns_type(f)).map(|s| s.to_string().into_bytes()),
+        _ => p.stringForType(&ns_type(f)).map(|s| s.to_string().into_bytes()),
     }
 }
 
@@ -37,7 +45,7 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
     let p = pb();
     let mut all: Vec<(Retained<NSString>, Retained<NSData>)> = items
         .iter()
-        .map(|(f, d)| (NSString::from_str(ns_type(*f).to_string().as_str()), NSData::with_bytes(d)))
+        .map(|(f, d)| (ns_type(*f), NSData::with_bytes(d)))
         .collect();
     if keep_others {
         let written: Vec<String> = items.iter().map(|(f, _)| ns_type(*f).to_string()).collect();

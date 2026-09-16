@@ -3,18 +3,19 @@ use crate::{clipboard, markdown};
 
 /// A representation the clipboard can hold.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Flavor { Text, Html, Rtf }
+pub enum Flavor { Text, Html, Rtf, Md }
 
 impl Flavor {
-    pub const ALL: [Flavor; 3] = [Flavor::Text, Flavor::Html, Flavor::Rtf];
+    pub const ALL: [Flavor; 4] = [Flavor::Text, Flavor::Html, Flavor::Rtf, Flavor::Md];
     pub fn label(self) -> &'static str {
-        match self { Flavor::Text => "plain text", Flavor::Html => "HTML", Flavor::Rtf => "RTF" }
+        match self { Flavor::Text => "plain text", Flavor::Html => "HTML", Flavor::Rtf => "RTF", Flavor::Md => "Markdown" }
     }
     pub fn pasted_by(self) -> &'static str {
         match self {
             Flavor::Text => "terminals, code editors, plain fields",
             Flavor::Html => "Mail, Notes, Slack, Outlook, Word, browsers (formatting kept)",
             Flavor::Rtf => "TextEdit, WordPad, Word when no HTML is present",
+            Flavor::Md => "nobody: private ClipTo flavor holding the Markdown source, so `ct md` can restore it exactly",
         }
     }
 }
@@ -54,11 +55,11 @@ impl Target {
     /// Whether the conversion replaces the whole clipboard by default. Text-producing
     /// conversions only update the plain-text flavor and keep HTML/RTF, unless forced.
     pub fn replaces_all(self) -> bool { matches!(self, Target::Rich | Target::Text) }
-    /// Which clipboard flavors to try first.
-    pub fn prefer(self) -> [Flavor; 3] {
+    /// Which clipboard flavors to try first. The private Markdown flavor wins when present.
+    pub fn prefer(self) -> [Flavor; 4] {
         match self {
-            Target::Rich | Target::Html | Target::Text => [Flavor::Text, Flavor::Html, Flavor::Rtf],
-            Target::Md | Target::Plain => [Flavor::Html, Flavor::Rtf, Flavor::Text],
+            Target::Rich | Target::Html | Target::Text => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
+            Target::Md | Target::Plain => [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text],
         }
     }
 }
@@ -90,6 +91,7 @@ pub fn convert(src: &Source, target: Target) -> Output {
             let mut items = vec![(Flavor::Html, html.clone().into_bytes())];
             if let Some(rtf) = clipboard::rich::html_to_rtf(&html) { items.push((Flavor::Rtf, rtf)); }
             items.push((Flavor::Text, markdown::to_plain(&md).into_bytes()));
+            items.push((Flavor::Md, md.into_bytes()));
             Output { result: body + "\n", items }
         }
         Target::Md => { let r = src.markdown(); Output { items: text(r.clone()), result: r } }
@@ -109,7 +111,7 @@ pub fn read_source(prefer: &[Flavor]) -> Option<Source> {
             Flavor::Rtf => if let Some(b) = clipboard::read(Flavor::Rtf) {
                 if let Some(h) = clipboard::rich::rtf_to_html(&b) { return Some(Source::Html(h)); }
             },
-            Flavor::Text => if let Some(b) = clipboard::read(Flavor::Text) {
+            Flavor::Text | Flavor::Md => if let Some(b) = clipboard::read(*f) {
                 if let Ok(s) = String::from_utf8(b) { return Some(Source::Markdown(s)); }
             },
         }
@@ -147,6 +149,10 @@ pub fn already_satisfied(target: Target) -> Option<String> {
         Target::Rich => has(Flavor::Html).then(|| "HTML is already on the clipboard".to_string()),
         Target::Md => {
             if !has(Flavor::Text) { return None; }
+            if has(Flavor::Md) {
+                let same = clipboard::read(Flavor::Md).map(|b| b == text().into_bytes()).unwrap_or(false);
+                return same.then(|| "the text flavor already is the Markdown source".to_string());
+            }
             if !has(Flavor::Html) && !has(Flavor::Rtf) { return Some("no rich flavor, the text is taken as is".into()); }
             looks_like_markdown(&text()).then(|| "the text flavor already looks like Markdown".to_string())
         }
