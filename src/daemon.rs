@@ -53,26 +53,59 @@ struct Ids {
     targets: Vec<(String, Target)>,
 }
 
+/// Wrap a preview into at most `lines` lines of about `width` characters.
+fn wrap_preview(text: &str, width: usize, lines: usize) -> String {
+    let flat: String = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    let mut out: Vec<String> = Vec::new();
+    let mut cur = String::new();
+    for word in flat.split(' ') {
+        if !cur.is_empty() && cur.chars().count() + 1 + word.chars().count() > width {
+            out.push(std::mem::take(&mut cur));
+            if out.len() == lines { break; }
+        }
+        if !cur.is_empty() { cur.push(' '); }
+        cur.push_str(word);
+    }
+    if out.len() < lines && !cur.is_empty() { out.push(cur); }
+    let truncated = out.iter().map(|l| l.chars().count() + 1).sum::<usize>() < flat.chars().count() + 1;
+    if truncated {
+        if let Some(last) = out.last_mut() {
+            *last = last.chars().take(width.saturating_sub(1)).collect::<String>() + "…";
+        }
+    }
+    out.join("\n")
+}
+
+const PREVIEW_MARKER: &str = "\u{200b}preview";
+
 fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     let menu = Menu::new();
     let present = clipboard::present();
+    let preview = clipboard::read(crate::convert::Flavor::Text)
+        .and_then(|b| String::from_utf8(b).ok())
+        .map(|t| wrap_preview(&t, 44, 3))
+        .filter(|p| !p.is_empty());
+    if let Some(p) = &preview {
+        // On macOS the marker title is replaced by a small attributed title; elsewhere show one line.
+        let title = if cfg!(target_os = "macos") { PREVIEW_MARKER.to_string() } else { p.lines().next().unwrap_or("").to_string() };
+        let _ = menu.append(&MenuItem::new(title, false, None));
+    }
     let header = if present.is_empty() {
         "Clipboard: empty".to_string()
     } else {
         format!("Clipboard: {}", present.iter().map(|f| f.label()).collect::<Vec<_>>().join(", "))
     };
     let _ = menu.append(&MenuItem::new(header, false, None));
-    if let Some(text) = clipboard::read(crate::convert::Flavor::Text).and_then(|b| String::from_utf8(b).ok()) {
-        let preview: String = text.trim().replace('\n', " ⏎ ");
-        let preview: String = preview.chars().take(60).collect::<String>() + if preview.chars().count() > 60 { "…" } else { "" };
-        let _ = menu.append(&MenuItem::new(format!("   {preview}"), false, None));
-    }
     let _ = menu.append(&PredefinedMenuItem::separator());
-    let _ = menu.append(&MenuItem::new("Convert to", false, None));
     let mut ids = Ids { targets: Vec::new() };
+    let mut badges: Vec<(String, String)> = Vec::new();
     for (i, t) in Target::ALL.iter().enumerate() {
-        let item = MenuItem::with_id(format!("target-{}", t.name()), format!("{}\t{}", t.title(), i + 1), !present.is_empty(), None);
+        let n = (i + 1).to_string();
+        // Windows menus right-align text after a tab; macOS gets a badge pill instead.
+        let title = if cfg!(target_os = "macos") { t.title().to_string() } else { format!("{}\t{n}", t.title()) };
+        let item = MenuItem::with_id(format!("target-{}", t.name()), &title, !present.is_empty(), None);
         ids.targets.push((item.id().0.clone(), *t));
+        badges.push((title, n));
         let _ = menu.append(&item);
     }
     if resident {
@@ -81,6 +114,10 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
         let _ = menu.append(&MenuItem::with_id("about", "ClipTo — John Knipper, jkn.me", true, None));
         let _ = menu.append(&MenuItem::with_id("quit", "Quit ct", true, None));
     }
+    #[cfg(target_os = "macos")]
+    crate::macos_menu::decorate(&menu, preview.as_deref().map(|p| (PREVIEW_MARKER, p)), &badges);
+    #[cfg(not(target_os = "macos"))]
+    let _ = badges;
     (menu, ids)
 }
 

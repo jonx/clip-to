@@ -28,7 +28,7 @@ strip = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"
-objc2-app-kit = { version = "0.3.2", features = ["NSPasteboard", "NSAttributedString", "NSApplication", "NSResponder", "NSRunningApplication"] }
+objc2-app-kit = { version = "0.3.2", features = ["NSPasteboard", "NSAttributedString", "NSApplication", "NSResponder", "NSRunningApplication", "NSMenu", "NSMenuItem", "NSMenuItemBadge", "NSFont", "NSColor"] }
 objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArray", "NSDictionary", "NSRange", "NSAttributedString", "NSError", "NSObject", "NSEnumerator"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]

@@ -3,6 +3,8 @@ mod autostart;
 mod clipboard;
 mod convert;
 mod daemon;
+#[cfg(target_os = "macos")]
+mod macos_menu;
 mod markdown;
 mod term;
 
