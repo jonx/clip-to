@@ -88,8 +88,10 @@ impl Source {
 
 /// Apps that flatten HTML to their own styles but render RTF faithfully: for them `rich`
 /// should offer RTF without HTML.
+#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
 pub const RTF_PREFERRING_APPS: [&str; 4] = ["com.apple.Notes", "com.apple.TextEdit", "com.apple.iWork.Pages", "com.apple.Stickies"];
 
+#[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
 pub fn prefers_rtf(app_id: &str) -> bool { RTF_PREFERRING_APPS.contains(&app_id) }
 
 pub struct Output {
@@ -97,6 +99,7 @@ pub struct Output {
     pub items: Vec<(Flavor, Vec<u8>)>,
 }
 
+#[cfg(test)]
 pub fn convert(src: &Source, target: Target) -> Output { convert_for(src, target, false) }
 
 /// `rtf_only`: for `rich`, drop the HTML flavor when RTF is available (see `RTF_PREFERRING_APPS`).
