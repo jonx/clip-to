@@ -196,6 +196,14 @@ mod tests {
         assert!(md.contains("## \\<name> — work in progress"), "{md}");
     }
 
+    /// Regression: GitHub puts an icon-only permalink anchor after every heading.
+    #[test]
+    fn github_heading_anchors_are_dropped() {
+        let html = "<div><h1>ClipTo</h1><a href=\"https://github.com/x#clipto\"><svg></svg></a></div><p>Body with <code>ct</code>.</p>";
+        let md = from_html(html);
+        assert_eq!(md, "# ClipTo\n\nBody with `ct`.\n");
+    }
+
     #[test]
     fn nested_and_ordered_lists_from_html() {
         let html = "<h2>Plan</h2><p>Some <b>bold</b> and <a href=\"https://aros.org\">a link</a> with <code>code</code>.</p>\

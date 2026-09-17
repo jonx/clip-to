@@ -56,18 +56,21 @@ impl Target {
     /// Whether the conversion replaces the whole clipboard by default. Text-producing
     /// conversions only update the plain-text flavor and keep HTML/RTF, unless forced.
     pub fn replaces_all(self) -> bool { matches!(self, Target::Rich | Target::Text) }
-    /// Which clipboard flavors to try first. The private Markdown flavor wins when present.
-    /// `rich` and `html` build from the text when it looks like Markdown (Markdown typed in a
-    /// browser field comes with a useless HTML wrapper), otherwise from the rich flavors.
-    pub fn prefer(self) -> [Flavor; 4] {
+    /// Which clipboard flavors to try first, given whether the text flavor looks like Markdown.
+    /// The private Markdown flavor wins when present. `rich` and `html` build from the text when
+    /// it looks like Markdown (Markdown typed in a browser field comes with a useless HTML wrapper),
+    /// otherwise from the rich flavors.
+    pub fn prefer_given(self, text_is_md: bool) -> [Flavor; 4] {
         match self {
             Target::Text => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
-            Target::Rich | Target::Html => {
-                let text_is_md = clipboard::read(Flavor::Text).map(|b| looks_like_markdown(&String::from_utf8_lossy(&b))).unwrap_or(false);
-                if text_is_md { [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf] } else { [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text] }
-            }
-            Target::Md | Target::Plain => [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text],
+            Target::Rich | Target::Html if text_is_md => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
+            Target::Rich | Target::Html | Target::Md | Target::Plain => [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text],
         }
+    }
+
+    pub fn prefer(self) -> [Flavor; 4] {
+        let text_is_md = clipboard::read(Flavor::Text).map(|b| looks_like_markdown(&String::from_utf8_lossy(&b))).unwrap_or(false);
+        self.prefer_given(text_is_md)
     }
 }
 
@@ -147,28 +150,41 @@ fn looks_like_html(text: &str) -> bool {
     t.starts_with('<') && text.contains("</")
 }
 
+/// What is on the clipboard, as far as the skip rule needs to know.
+pub struct Snapshot {
+    pub present: Vec<Flavor>,
+    pub text: String,
+    pub md_source: Option<String>,
+}
+
+impl Snapshot {
+    pub fn take() -> Snapshot {
+        let read = |f: Flavor| clipboard::read(f).map(|b| String::from_utf8_lossy(&b).into_owned());
+        Snapshot { present: clipboard::present(), text: read(Flavor::Text).unwrap_or_default(), md_source: read(Flavor::Md) }
+    }
+    fn has(&self, f: Flavor) -> bool { self.present.contains(&f) }
+}
+
 /// When the clipboard already holds what `target` would produce, say why and skip the conversion.
-pub fn already_satisfied(target: Target) -> Option<String> {
-    let present = clipboard::present();
-    let has = |f: Flavor| present.contains(&f);
-    let text = || clipboard::read(Flavor::Text).and_then(|b| String::from_utf8(b).ok()).unwrap_or_default();
+pub fn satisfied(target: Target, c: &Snapshot) -> Option<String> {
     match target {
-        Target::Rich => (has(Flavor::Html) && !looks_like_markdown(&text())).then(|| "HTML is already on the clipboard and the text is not Markdown".to_string()),
+        Target::Rich => (c.has(Flavor::Html) && !looks_like_markdown(&c.text)).then(|| "HTML is already on the clipboard and the text is not Markdown".to_string()),
         Target::Md => {
-            if !has(Flavor::Text) { return None; }
-            if has(Flavor::Md) {
-                let same = clipboard::read(Flavor::Md).map(|b| b == text().into_bytes()).unwrap_or(false);
-                return same.then(|| "the text flavor already is the Markdown source".to_string());
+            if !c.has(Flavor::Text) { return None; }
+            if let Some(md) = &c.md_source {
+                return (*md == c.text).then(|| "the text flavor already is the Markdown source".to_string());
             }
-            if !has(Flavor::Html) && !has(Flavor::Rtf) { return Some("no rich flavor, the text is taken as is".into()); }
-            looks_like_markdown(&text()).then(|| "the text flavor already looks like Markdown".to_string())
+            if !c.has(Flavor::Html) && !c.has(Flavor::Rtf) { return Some("no rich flavor, the text is taken as is".into()); }
+            looks_like_markdown(&c.text).then(|| "the text flavor already looks like Markdown".to_string())
         }
-        Target::Plain => (has(Flavor::Text) && !has(Flavor::Html) && !has(Flavor::Rtf) && !looks_like_markdown(&text()))
+        Target::Plain => (c.has(Flavor::Text) && !c.has(Flavor::Html) && !c.has(Flavor::Rtf) && !looks_like_markdown(&c.text))
             .then(|| "the text has no Markdown syntax".to_string()),
-        Target::Html => (has(Flavor::Text) && looks_like_html(&text())).then(|| "the text flavor already is HTML source".to_string()),
-        Target::Text => (present == [Flavor::Text]).then(|| "only plain text is on the clipboard".to_string()),
+        Target::Html => (c.has(Flavor::Text) && looks_like_html(&c.text)).then(|| "the text flavor already is HTML source".to_string()),
+        Target::Text => (c.present == [Flavor::Text]).then(|| "only plain text is on the clipboard".to_string()),
     }
 }
+
+pub fn already_satisfied(target: Target) -> Option<String> { satisfied(target, &Snapshot::take()) }
 
 #[cfg(test)]
 mod tests {
@@ -259,6 +275,50 @@ mod tests {
         assert!(md.contains("**AFS+**"), "{md}");
         assert!(md.contains("`C:Ferail`") || md.contains("C:Ferail"), "{md}");
         assert!(md.contains("[the site](https://aros.org"), "{md}");
+    }
+
+    fn snap(present: &[Flavor], text: &str, md: Option<&str>) -> Snapshot {
+        Snapshot { present: present.to_vec(), text: text.into(), md_source: md.map(str::to_string) }
+    }
+
+    /// Regression: a page copied from a browser has HTML plus flat text. `md`, `plain` and `html`
+    /// must convert from the HTML; `rich` is already satisfied.
+    #[test]
+    fn browser_page_html_plus_flat_text() {
+        let c = snap(&[Flavor::Text, Flavor::Html], "ClipTo\nct converts what is on the clipboard.\n\nInstall", None);
+        assert!(satisfied(Target::Md, &c).is_none());
+        assert!(satisfied(Target::Plain, &c).is_none());
+        assert!(satisfied(Target::Html, &c).is_none());
+        assert!(satisfied(Target::Rich, &c).is_some());
+        assert_eq!(Target::Html.prefer_given(false)[1], Flavor::Html);
+        assert_eq!(Target::Md.prefer_given(false)[1], Flavor::Html);
+    }
+
+    /// Regression: Markdown typed in a browser field comes with an HTML wrapper; the text is the
+    /// real source, so `rich` and `html` must build from it and `rich` must not be skipped.
+    #[test]
+    fn markdown_typed_in_a_browser_field() {
+        let c = snap(&[Flavor::Text, Flavor::Html], "# Title\n- **bold** item\n", None);
+        assert!(satisfied(Target::Rich, &c).is_none());
+        assert!(satisfied(Target::Md, &c).is_some(), "text already is Markdown");
+        assert_eq!(Target::Rich.prefer_given(true)[1], Flavor::Text);
+        assert_eq!(Target::Html.prefer_given(true)[1], Flavor::Text);
+    }
+
+    #[test]
+    fn skip_rule_other_cases() {
+        let flat = snap(&[Flavor::Text], "just some words\nsecond line", None);
+        assert!(satisfied(Target::Plain, &flat).is_some());
+        assert!(satisfied(Target::Text, &flat).is_some());
+        assert!(satisfied(Target::Md, &flat).is_some());
+        assert!(satisfied(Target::Rich, &flat).is_none());
+        let after_rich = snap(&[Flavor::Text, Flavor::Html, Flavor::Rtf, Flavor::Md], "TITLE\n• item", Some("# Title\n- item\n"));
+        assert!(satisfied(Target::Md, &after_rich).is_none(), "text is the plain rendering, md must restore the source");
+        let restored = snap(&[Flavor::Text, Flavor::Html, Flavor::Rtf, Flavor::Md], "# Title\n- item\n", Some("# Title\n- item\n"));
+        assert!(satisfied(Target::Md, &restored).is_some());
+        let html_src = snap(&[Flavor::Text], "<p>hi</p>", None);
+        assert!(satisfied(Target::Html, &html_src).is_some());
+        assert!(satisfied(Target::Text, &after_rich).is_none());
     }
 
     #[test]

@@ -54,12 +54,7 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
             for t in existing.iter() {
                 let name = t.to_string();
                 if written.contains(&name) { continue; }
-                // Legacy pboard types ("NSStringPboardType", "Apple HTML pasteboard type", ...) are aliases
-                // of the modern UTIs: re-adding them would overwrite what we just wrote. Same for the
-                // UTF-16 variants of the text flavor.
-                let legacy = !name.contains('.') || name.contains(' ');
-                let text_alias = writing_text && (name.starts_with("public.utf16") || name == "public.plain-text");
-                if legacy || text_alias { continue; }
+                if !keep_existing_type(&name, writing_text) { continue; }
                 if let Some(d) = p.dataForType(&t) { all.push((NSString::from_str(&name), d)); }
             }
         }
@@ -69,6 +64,36 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
         if !p.setData_forType(Some(d), t) { return Err(format!("could not write {t}")); }
     }
     Ok(())
+}
+
+/// Should an existing pasteboard type be carried over when we rewrite the clipboard?
+/// Legacy pboard types ("NSStringPboardType", "Apple HTML pasteboard type", ...) are aliases of the
+/// modern UTIs: re-adding them would overwrite what we just wrote. Same for the UTF-16 variants of
+/// the text flavor when we are writing text.
+pub fn keep_existing_type(name: &str, writing_text: bool) -> bool {
+    let legacy = !name.contains('.') || name.contains(' ');
+    let text_alias = writing_text && (name.starts_with("public.utf16") || name == "public.plain-text");
+    !(legacy || text_alias)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::keep_existing_type;
+
+    /// Regression: Chrome's clipboard carries NSStringPboardType, whose old text overwrote the
+    /// Markdown written by `ct md` when it was carried over.
+    #[test]
+    fn legacy_aliases_are_not_carried_over() {
+        for legacy in ["NSStringPboardType", "Apple HTML pasteboard type", "NeXT Rich Text Format v1.0 pasteboard type", "CorePasteboardFlavorType 0x75743136"] {
+            assert!(!keep_existing_type(legacy, true), "{legacy}");
+            assert!(!keep_existing_type(legacy, false), "{legacy}");
+        }
+        assert!(!keep_existing_type("public.utf16-external-plain-text", true));
+        assert!(keep_existing_type("public.utf16-external-plain-text", false));
+        for modern in ["public.html", "public.rtf", "org.chromium.source-url", "me.jkn.clipto.markdown", "public.png"] {
+            assert!(keep_existing_type(modern, true), "{modern}");
+        }
+    }
 }
 
 pub fn change_count() -> i64 { pb().changeCount() as i64 }
