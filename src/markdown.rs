@@ -23,11 +23,22 @@ pub fn to_html(md: &str) -> String {
     out
 }
 
+/// HTML for the clipboard: like `to_html`, but headings carry explicit inline sizes because some
+/// pasting apps (Notes, Outlook) ignore default heading styles and would show them as body text.
+pub fn to_clipboard_html(md: &str) -> String {
+    let mut html = to_html(md);
+    for (level, size) in [(1, "2em"), (2, "1.5em"), (3, "1.25em"), (4, "1.1em"), (5, "1em"), (6, "0.9em")] {
+        html = html.replace(&format!("<h{level}>"), &format!("<h{level} style=\"font-size:{size};font-weight:bold;margin:0.6em 0 0.3em\">"));
+    }
+    html
+}
+
 pub fn wrap_html(body: &str) -> String {
     format!(
         "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><style>\n\
          body{{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;font-size:13px}}\n\
          code,pre{{font-family:Menlo,Consolas,monospace;font-size:12px}}\n\
+         h1 strong,h2 strong,h3 strong{{font-weight:900}}\n\
          </style></head><body>{body}</body></html>"
     )
 }

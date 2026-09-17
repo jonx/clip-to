@@ -96,7 +96,7 @@ pub fn convert(src: &Source, target: Target) -> Output {
     match target {
         Target::Rich => {
             let md = src.markdown();
-            let body = markdown::to_html(&md);
+            let body = markdown::to_clipboard_html(&md);
             let html = markdown::wrap_html(&body);
             let mut items = vec![(Flavor::Html, html.clone().into_bytes())];
             if let Some(rtf) = clipboard::rich::html_to_rtf(&html) { items.push((Flavor::Rtf, rtf)); }
@@ -202,7 +202,7 @@ mod tests {
         let out = convert(&Source::Markdown(MD.into()), Target::Rich);
         let html = flavor(&out, Flavor::Html).unwrap();
         assert!(html.starts_with("<!DOCTYPE html>"));
-        assert!(html.contains("<h1>Update</h1>"));
+        assert!(html.contains("<h1 style=\"font-size:2em;font-weight:bold;margin:0.6em 0 0.3em\">Update</h1>"));
         assert!(html.contains("<li><strong>AFS+</strong>: portable filesystem, runs as <code>C:Ferail</code> on AROS.</li>"));
         assert!(html.contains("<a href=\"https://aros.org\">the site</a>"));
         let plain = flavor(&out, Flavor::Text).unwrap();
@@ -248,7 +248,7 @@ mod tests {
     fn html_to_rich_rebuilds_from_markdown() {
         let out = convert(&Source::Html(HTML.into()), Target::Rich);
         let html = flavor(&out, Flavor::Html).unwrap();
-        assert!(html.contains("<h2>Plan</h2>"));
+        assert!(html.contains("font-size:1.5em") && html.contains(">Plan</h2>"));
         assert!(html.contains("<strong>bold</strong>"));
         assert!(html.contains("<ol>") && html.contains("<ul>"));
         assert!(html.contains("<pre><code>make -j8\n./configure"));
