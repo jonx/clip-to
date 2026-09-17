@@ -6,11 +6,15 @@
 use crate::convert::{self, Target};
 use crate::{clipboard, ABOUT_URL};
 use global_hotkey::{hotkey::HotKey, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
-use muda::{ContextMenu, Menu, MenuEvent, MenuItem, PredefinedMenuItem};
+#[cfg(not(target_os = "macos"))]
+use muda::ContextMenu;
+use muda::{Menu, MenuEvent, MenuItem, PredefinedMenuItem};
 use std::time::{Duration, Instant};
 use tao::event::Event;
 use tao::event_loop::{ControlFlow, EventLoop};
-use tao::window::{Window, WindowBuilder};
+#[cfg(not(target_os = "macos"))]
+use tao::window::Window;
+use tao::window::WindowBuilder;
 use tray_icon::{Icon, TrayIcon, TrayIconBuilder};
 
 pub const DEFAULT_HOTKEY: &str = "ctrl+alt+super+v";
@@ -45,6 +49,12 @@ fn force_modifier_held() -> bool {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     { false }
+}
+
+#[cfg(target_os = "macos")]
+fn frontmost_app_id() -> Option<String> {
+    use objc2_app_kit::NSWorkspace;
+    NSWorkspace::sharedWorkspace().frontmostApplication().and_then(|a| a.bundleIdentifier().map(|s| s.to_string()))
 }
 
 /// A tiny clipboard glyph drawn in code, so no image file has to ship.
@@ -142,10 +152,12 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     (menu, ids)
 }
 
+#[cfg(not(target_os = "macos"))]
 struct PopupOutcome { forced: bool, app_id: Option<String> }
 
 /// Shows the popup (blocking); reports whether the force modifier was held when it closed and
 /// which app had focus before.
+#[cfg(not(target_os = "macos"))]
 fn show_popup(menu: &Menu, window: &Window) -> PopupOutcome {
     let previous = clipboard::activate_app_for_popup();
     #[cfg(target_os = "macos")]
@@ -188,6 +200,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         event_loop.set_activation_policy(ActivationPolicy::Accessory);
     }
     // A hidden window gives the context menu something to attach to.
+    #[allow(unused_variables)]
     let window = WindowBuilder::new().with_visible(false).with_decorations(false).with_title("ClipTo").build(&event_loop).expect("window");
 
     let manager = GlobalHotKeyManager::new().expect("hotkey manager");
@@ -210,24 +223,76 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
     }
 
     let mut last_change = clipboard::change_count();
+    #[cfg(target_os = "macos")]
+    let debug_panel_at = std::env::var_os("CT_DEBUG_PANEL").map(|_| Instant::now() + Duration::from_millis(800));
+    #[cfg(target_os = "macos")]
+    let mut debug_panel_shown = false;
     let mut flash_until: Option<Instant> = None;
+    #[allow(unused_mut)]
     let mut popup: Option<(Menu, Ids)> = None;
     let mut from_popup = false;
     let mut popup_forced = false;
     let mut popup_app: Option<String> = None;
 
+    /// Run one conversion request (from the menu or the panel), flash the outcome, paste if asked.
+    fn perform(tray: &TrayIcon, t: Target, force: bool, from_popup: bool, app_id: Option<&str>, auto_paste: bool) {
+        let satisfied = if force { None } else { convert::already_satisfied(t) };
+        let ok = if let Some(reason) = satisfied {
+            eprintln!("ct: clipboard unchanged: {reason} (hold the modifier to force)");
+            tray.set_title(Some(format!(" = {}", t.title())));
+            true
+        } else {
+            match convert::read_source(&t.prefer()) {
+                None => { tray.set_title(Some(" ✗ empty")); false }
+                Some(src) => {
+                    let rtf_only = from_popup && app_id.map(convert::prefers_rtf).unwrap_or(false);
+                    let out = convert::convert_for(&src, t, rtf_only);
+                    match clipboard::write(&out.items, !t.replaces_all()) {
+                        Ok(()) => { tray.set_title(Some(format!(" ✓ {}", t.title()))); true }
+                        Err(e) => { tray.set_title(Some(format!(" ✗ {e}"))); false }
+                    }
+                }
+            }
+        };
+        if ok && auto_paste && from_popup {
+            // Focus went back to the previous app when the menu/panel closed; give it a beat.
+            std::thread::sleep(Duration::from_millis(120));
+            if let Err(e) = crate::paste::paste() { eprintln!("ct: {e}"); tray.set_title(Some(" ✗ paste")); }
+        }
+    }
+
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(250));
+        #[cfg(target_os = "macos")]
+        let tick = if crate::macos_panel::is_open() { 50 } else { 250 };
+        #[cfg(not(target_os = "macos"))]
+        let tick = 250;
+        *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(tick));
         if let Event::LoopDestroyed = event { return; }
+
+        #[cfg(target_os = "macos")]
+        if let Some(at) = debug_panel_at { if !debug_panel_shown && Instant::now() >= at { debug_panel_shown = true; crate::macos_panel::show(); } }
+        #[cfg(target_os = "macos")]
+        if let Some(choice) = crate::macos_panel::take_choice() {
+            let app_id = frontmost_app_id();
+            perform(&tray, choice.target, choice.force, true, app_id.as_deref(), auto_paste);
+            flash_until = Some(Instant::now() + Duration::from_millis(1500));
+        }
 
         while let Ok(ev) = GlobalHotKeyEvent::receiver().try_recv() {
             if ev.state == HotKeyState::Pressed && ev.id == hotkey.id() {
-                let built = build_menu(&desc, false);
-                let outcome = show_popup(&built.0, &window);
-                popup_forced = outcome.forced;
-                popup_app = outcome.app_id;
-                popup = Some(built);
-                from_popup = true;
+                #[cfg(target_os = "macos")]
+                {
+                    crate::macos_panel::show();
+                }
+                #[cfg(not(target_os = "macos"))]
+                {
+                    let built = build_menu(&desc, false);
+                    let outcome = show_popup(&built.0, &window);
+                    popup_forced = outcome.forced;
+                    popup_app = outcome.app_id;
+                    popup = Some(built);
+                    from_popup = true;
+                }
             }
         }
 
@@ -237,32 +302,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 .find(|(i, _)| i == id).map(|(_, t)| *t);
             if let Some(t) = target {
                 let force = (from_popup && popup_forced) || force_modifier_held();
-                let satisfied = if force { None } else { convert::already_satisfied(t) };
-                if let Some(reason) = satisfied {
-                    eprintln!("ct: clipboard unchanged: {reason} (hold the modifier to force)");
-                    tray.set_title(Some(format!(" = {}", t.title())));
-                    if auto_paste && from_popup {
-                        std::thread::sleep(Duration::from_millis(120));
-                        if let Err(e) = crate::paste::paste() { eprintln!("ct: {e}"); tray.set_title(Some(" ✗ paste")); }
-                    }
-                } else { match convert::read_source(&t.prefer()) {
-                    None => { tray.set_title(Some(" ✗ empty")); }
-                    Some(src) => {
-                        let rtf_only = from_popup && popup_app.as_deref().map(convert::prefers_rtf).unwrap_or(false);
-                        let out = convert::convert_for(&src, t, rtf_only);
-                        match clipboard::write(&out.items, !t.replaces_all()) {
-                            Ok(()) => {
-                                tray.set_title(Some(format!(" ✓ {}", t.title())));
-                                if auto_paste && from_popup {
-                                    // Focus went back to the previous app when the menu closed; give it a beat.
-                                    std::thread::sleep(Duration::from_millis(120));
-                                    if let Err(e) = crate::paste::paste() { eprintln!("ct: {e}"); tray.set_title(Some(" ✗ paste")); }
-                                }
-                            }
-                            Err(e) => tray.set_title(Some(format!(" ✗ {e}"))),
-                        }
-                    }
-                } }
+                perform(&tray, t, force, from_popup, popup_app.as_deref(), auto_paste);
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
                 from_popup = false;
                 popup_forced = false;

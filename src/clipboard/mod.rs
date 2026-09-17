@@ -47,15 +47,14 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn change_count() -> i64 { imp::change_count() }
 
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(target_os = "windows")]
 pub use imp::PreviousApp;
-/// Bring the process to the front before showing a popup menu (macOS needs it for an accessory
-/// app) and remember who had focus.
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+/// Bring the process to the front before showing a popup menu and remember who had focus.
+#[cfg(target_os = "windows")]
 pub fn activate_app_for_popup() -> Option<PreviousApp> { imp::activate_app() }
 /// Bundle id of the app that had focus before the popup, when known.
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(target_os = "windows")]
 pub fn previous_app_id(prev: &Option<PreviousApp>) -> Option<String> { imp::previous_app_id(prev) }
 /// Return focus to the previously active app once the popup is gone.
-#[cfg(any(target_os = "macos", target_os = "windows"))]
+#[cfg(target_os = "windows")]
 pub fn restore_previous_app(prev: Option<PreviousApp>) { imp::restore_app(prev) }

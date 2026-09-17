@@ -33,8 +33,8 @@ strip = true
 core-foundation = "0.10.1"
 core-graphics = "0.25.0"
 objc2 = "0.6.4"
-objc2-app-kit = { version = "0.3.2", features = ["NSPasteboard", "NSAttributedString", "NSApplication", "NSResponder", "NSRunningApplication", "NSMenu", "NSMenuItem", "NSMenuItemBadge", "NSFont", "NSColor", "NSWorkspace", "NSEvent"] }
-objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArray", "NSDictionary", "NSRange", "NSAttributedString", "NSError", "NSObject", "NSEnumerator"] }
+objc2-app-kit = { version = "0.3.2", features = ["NSPasteboard", "NSAttributedString", "NSApplication", "NSResponder", "NSRunningApplication", "NSMenu", "NSMenuItem", "NSMenuItemBadge", "NSFont", "NSColor", "NSWorkspace", "NSEvent", "NSPanel", "NSWindow", "NSView", "NSTrackingArea", "NSTextView", "NSScrollView", "NSText", "NSTextStorage", "NSStringDrawing", "NSBezierPath", "NSGraphics", "NSButton", "NSControl", "NSCell", "NSScreen", "NSClipView", "NSTextContainer", "NSAppearance", "NSGraphicsContext", "NSLayoutManager", "NSFontDescriptor"] }
+objc2-foundation = { version = "0.3.2", features = ["NSString", "NSData", "NSArray", "NSDictionary", "NSRange", "NSAttributedString", "NSError", "NSObject", "NSEnumerator", "NSGeometry", "NSValue"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 clipboard-win = "5.4.1"

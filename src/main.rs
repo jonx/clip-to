@@ -7,6 +7,10 @@ mod convert;
 mod daemon;
 #[cfg(target_os = "macos")]
 mod macos_menu;
+#[cfg(target_os = "macos")]
+mod macos_panel;
+#[cfg(target_os = "macos")]
+mod config;
 mod markdown;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod paste;
