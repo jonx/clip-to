@@ -41,7 +41,12 @@ ct text    (ct t)  keep only the plain-text flavor (drop HTML/RTF)
 -p                 print the result after writing the clipboard
 -x                 exclusive: drop the other flavors
 -f                 force: convert even when the clipboard already holds the requested format
+--rtf              rich: write RTF without HTML, for Apple Notes, TextEdit, Pages
 ```
+
+Apple Notes, TextEdit, Pages and Stickies pick HTML when it is present and flatten it to their own
+styles, while they render RTF faithfully (real heading sizes, bold inside headings). The hotkey
+popup detects those apps and writes RTF only for them; on the command line use `ct rich --rtf`.
 
 If the clipboard already holds what you ask for, nothing is converted and the clipboard is left
 untouched: `rich` when HTML is present and the text is not Markdown, `md` when there is no rich

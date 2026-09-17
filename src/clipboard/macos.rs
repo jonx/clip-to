@@ -145,6 +145,11 @@ pub fn activate_app() -> Option<PreviousApp> {
     prev
 }
 
+/// Bundle identifier of the app that had focus (e.g. "com.apple.Notes").
+pub fn previous_app_id(prev: &Option<PreviousApp>) -> Option<String> {
+    prev.as_ref().and_then(|PreviousApp(app)| app.bundleIdentifier().map(|s| s.to_string()))
+}
+
 /// Give focus back to the app the user was in, so their next paste lands in the right field.
 pub fn restore_app(prev: Option<PreviousApp>) {
     use objc2_app_kit::NSApplicationActivationOptions;

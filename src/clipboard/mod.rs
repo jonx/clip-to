@@ -53,6 +53,9 @@ pub use imp::PreviousApp;
 /// app) and remember who had focus.
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn activate_app_for_popup() -> Option<PreviousApp> { imp::activate_app() }
+/// Bundle id of the app that had focus before the popup, when known.
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+pub fn previous_app_id(prev: &Option<PreviousApp>) -> Option<String> { imp::previous_app_id(prev) }
 /// Return focus to the previously active app once the popup is gone.
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub fn restore_previous_app(prev: Option<PreviousApp>) { imp::restore_app(prev) }

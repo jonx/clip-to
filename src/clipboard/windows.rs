@@ -74,3 +74,4 @@ pub fn html_to_rtf(_html: &str) -> Option<Vec<u8>> { None }
 pub struct PreviousApp;
 pub fn activate_app() -> Option<PreviousApp> { None }
 pub fn restore_app(_p: Option<PreviousApp>) {}
+pub fn previous_app_id(_p: &Option<PreviousApp>) -> Option<String> { None }

@@ -41,6 +41,7 @@ fn print_help() {
         ("-p", "print the result after writing the clipboard"),
         ("-x", "drop the other flavors (md, plain, html keep HTML/RTF)"),
         ("-f", "convert even if the clipboard already holds the requested format"),
+        ("--rtf", "rich: RTF without HTML, for Notes, TextEdit, Pages (the popup does it automatically)"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     for (k, v) in [
@@ -82,6 +83,7 @@ fn main() {
     let mut also_print = false;
     let mut exclusive = false;
     let mut force = false;
+    let mut rtf_only = false;
     #[allow(unused_variables, unused_assignments)]
     let mut hotkey: Option<String> = None;
     #[allow(unused_variables, unused_assignments)]
@@ -95,6 +97,7 @@ fn main() {
             "-p" => also_print = true,
             "-x" => exclusive = true,
             "-f" => force = true,
+            "--rtf" => rtf_only = true,
             "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); let _ = &hotkey; }
             "--no-paste" => { no_paste = true; let _ = no_paste; }
             "-h" | "--help" | "help" => { print_help(); return; }
@@ -145,7 +148,7 @@ fn main() {
                     fail(&format!("nothing usable on the clipboard (types: {})", clipboard::types().join(", ")))
                 }),
             };
-            let out = convert::convert(&src, target);
+            let out = convert::convert_for(&src, target, rtf_only);
             if to_stdout {
                 let _ = std::io::stdout().write_all(out.result.as_bytes());
             } else {

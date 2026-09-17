@@ -86,20 +86,31 @@ impl Source {
     }
 }
 
+/// Apps that flatten HTML to their own styles but render RTF faithfully: for them `rich`
+/// should offer RTF without HTML.
+pub const RTF_PREFERRING_APPS: [&str; 4] = ["com.apple.Notes", "com.apple.TextEdit", "com.apple.iWork.Pages", "com.apple.Stickies"];
+
+pub fn prefers_rtf(app_id: &str) -> bool { RTF_PREFERRING_APPS.contains(&app_id) }
+
 pub struct Output {
     pub result: String,
     pub items: Vec<(Flavor, Vec<u8>)>,
 }
 
-pub fn convert(src: &Source, target: Target) -> Output {
+pub fn convert(src: &Source, target: Target) -> Output { convert_for(src, target, false) }
+
+/// `rtf_only`: for `rich`, drop the HTML flavor when RTF is available (see `RTF_PREFERRING_APPS`).
+pub fn convert_for(src: &Source, target: Target, rtf_only: bool) -> Output {
     let text = |s: String| vec![(Flavor::Text, s.into_bytes())];
     match target {
         Target::Rich => {
             let md = src.markdown();
             let body = markdown::to_clipboard_html(&md);
             let html = markdown::wrap_html(&body);
-            let mut items = vec![(Flavor::Html, html.clone().into_bytes())];
-            if let Some(rtf) = clipboard::rich::html_to_rtf(&html) { items.push((Flavor::Rtf, rtf)); }
+            let rtf = clipboard::rich::html_to_rtf(&html);
+            let mut items = Vec::new();
+            if !(rtf_only && rtf.is_some()) { items.push((Flavor::Html, html.clone().into_bytes())); }
+            if let Some(rtf) = rtf { items.push((Flavor::Rtf, rtf)); }
             items.push((Flavor::Text, markdown::to_plain(&md).into_bytes()));
             items.push((Flavor::Md, md.into_bytes()));
             Output { result: body + "\n", items }
@@ -215,6 +226,16 @@ mod tests {
             let rtf = flavor(&out, Flavor::Rtf).expect("macOS produces RTF");
             assert!(rtf.starts_with("{\\rtf1"));
         }
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn rich_for_notes_drops_html() {
+        let out = convert_for(&Source::Markdown(MD.into()), Target::Rich, true);
+        assert!(flavor(&out, Flavor::Html).is_none());
+        assert!(flavor(&out, Flavor::Rtf).is_some());
+        assert!(flavor(&out, Flavor::Text).is_some());
+        assert!(prefers_rtf("com.apple.Notes") && !prefers_rtf("com.tinyspeck.slackmacgap"));
     }
 
     #[test]

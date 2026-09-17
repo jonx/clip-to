@@ -142,8 +142,11 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     (menu, ids)
 }
 
-/// Shows the popup (blocking) and returns whether the force modifier was held when it closed.
-fn show_popup(menu: &Menu, window: &Window) -> bool {
+struct PopupOutcome { forced: bool, app_id: Option<String> }
+
+/// Shows the popup (blocking); reports whether the force modifier was held when it closed and
+/// which app had focus before.
+fn show_popup(menu: &Menu, window: &Window) -> PopupOutcome {
     let previous = clipboard::activate_app_for_popup();
     #[cfg(target_os = "macos")]
     unsafe {
@@ -161,9 +164,10 @@ fn show_popup(menu: &Menu, window: &Window) -> bool {
     { let _ = (menu, window); }
     // Sample the modifier now: by the time the menu event is processed the key is often released.
     let forced = force_modifier_held();
+    let app_id = clipboard::previous_app_id(&previous);
     // The menu blocks until dismissed; hand focus back so the user's ⌘V lands where they were.
     clipboard::restore_previous_app(previous);
-    forced
+    PopupOutcome { forced, app_id }
 }
 
 pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
@@ -210,6 +214,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
     let mut popup: Option<(Menu, Ids)> = None;
     let mut from_popup = false;
     let mut popup_forced = false;
+    let mut popup_app: Option<String> = None;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(250));
@@ -218,7 +223,9 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         while let Ok(ev) = GlobalHotKeyEvent::receiver().try_recv() {
             if ev.state == HotKeyState::Pressed && ev.id == hotkey.id() {
                 let built = build_menu(&desc, false);
-                popup_forced = show_popup(&built.0, &window);
+                let outcome = show_popup(&built.0, &window);
+                popup_forced = outcome.forced;
+                popup_app = outcome.app_id;
                 popup = Some(built);
                 from_popup = true;
             }
@@ -241,7 +248,8 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 } else { match convert::read_source(&t.prefer()) {
                     None => { tray.set_title(Some(" ✗ empty")); }
                     Some(src) => {
-                        let out = convert::convert(&src, t);
+                        let rtf_only = from_popup && popup_app.as_deref().map(convert::prefers_rtf).unwrap_or(false);
+                        let out = convert::convert_for(&src, t, rtf_only);
                         match clipboard::write(&out.items, !t.replaces_all()) {
                             Ok(()) => {
                                 tray.set_title(Some(format!(" ✓ {}", t.title())));
@@ -258,6 +266,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
                 from_popup = false;
                 popup_forced = false;
+                popup_app = None;
             } else if id == "about" {
                 let _ = open_url(ABOUT_URL);
             } else if id == "accessibility" {
