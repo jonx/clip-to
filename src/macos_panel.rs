@@ -18,10 +18,12 @@ use objc2_foundation::{NSAttributedString, NSAttributedStringKey, NSData, NSDict
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
-pub struct Choice { pub target: Target, pub force: bool }
+pub struct Choice { pub target: Target, pub force: bool, pub app_id: Option<String> }
 
 thread_local! {
     static CHOICE: RefCell<Option<Choice>> = const { RefCell::new(None) };
+    /// Bundle id of the app that had focus when the panel opened (the paste destination).
+    static TARGET_APP: RefCell<Option<String>> = const { RefCell::new(None) };
     static PANEL: RefCell<Option<(Retained<ChooserPanel>, Retained<ChooserView>)>> = const { RefCell::new(None) };
 }
 
@@ -188,7 +190,8 @@ impl ChooserView {
     fn choose(&self, i: usize) {
         let target = { let s = self.ivars().state.borrow(); match s.rows.get(i) { Some(r) => r.target, None => return } };
         let force = self.force();
-        CHOICE.with(|c| *c.borrow_mut() = Some(Choice { target, force }));
+        let app_id = TARGET_APP.with(|a| a.borrow().clone());
+        CHOICE.with(|c| *c.borrow_mut() = Some(Choice { target, force, app_id }));
         close_panel();
     }
 
@@ -407,6 +410,9 @@ fn build(mtm: MainThreadMarker) -> (Retained<ChooserPanel>, Retained<ChooserView
 /// Show the chooser near the mouse pointer. The choice is delivered through `take_choice`.
 pub fn show() {
     let Some(mtm) = MainThreadMarker::new() else { return };
+    // Remember the destination before our panel becomes the key window.
+    let app_id = objc2_app_kit::NSWorkspace::sharedWorkspace().frontmostApplication().and_then(|a| a.bundleIdentifier().map(|s| s.to_string()));
+    TARGET_APP.with(|a| *a.borrow_mut() = app_id);
     PANEL.with(|slot| {
         if slot.borrow().is_none() { *slot.borrow_mut() = Some(build(mtm)); }
         let guard = slot.borrow();

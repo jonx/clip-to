@@ -51,12 +51,6 @@ fn force_modifier_held() -> bool {
     { false }
 }
 
-#[cfg(target_os = "macos")]
-fn frontmost_app_id() -> Option<String> {
-    use objc2_app_kit::NSWorkspace;
-    NSWorkspace::sharedWorkspace().frontmostApplication().and_then(|a| a.bundleIdentifier().map(|s| s.to_string()))
-}
-
 /// A tiny clipboard glyph drawn in code, so no image file has to ship.
 fn icon() -> Icon {
     const W: u32 = 22;
@@ -273,8 +267,8 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         if let Some(at) = debug_panel_at { if !debug_panel_shown && Instant::now() >= at { debug_panel_shown = true; crate::macos_panel::show(); } }
         #[cfg(target_os = "macos")]
         if let Some(choice) = crate::macos_panel::take_choice() {
-            let app_id = frontmost_app_id();
-            perform(&tray, choice.target, choice.force, true, app_id.as_deref(), auto_paste);
+            eprintln!("ct: {} for {}{}", choice.target.title(), choice.app_id.as_deref().unwrap_or("unknown app"), if choice.force { " (forced)" } else { "" });
+            perform(&tray, choice.target, choice.force, true, choice.app_id.as_deref(), auto_paste);
             flash_until = Some(Instant::now() + Duration::from_millis(1500));
         }
 
