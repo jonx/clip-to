@@ -1,6 +1,6 @@
 [package]
 name = "clip-to"
-version = "2.2.0"
+version = "2.2.1"
 edition = "2021"
 description = "Convert the clipboard between plain text, Markdown and rich text, from the command line or a tray hotkey"
 authors = ["John Knipper <code@jkn.me>"]
