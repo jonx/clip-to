@@ -142,7 +142,8 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
     (menu, ids)
 }
 
-fn show_popup(menu: &Menu, window: &Window) {
+/// Shows the popup (blocking) and returns whether the force modifier was held when it closed.
+fn show_popup(menu: &Menu, window: &Window) -> bool {
     let previous = clipboard::activate_app_for_popup();
     #[cfg(target_os = "macos")]
     unsafe {
@@ -158,8 +159,11 @@ fn show_popup(menu: &Menu, window: &Window) {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     { let _ = (menu, window); }
+    // Sample the modifier now: by the time the menu event is processed the key is often released.
+    let forced = force_modifier_held();
     // The menu blocks until dismissed; hand focus back so the user's ⌘V lands where they were.
     clipboard::restore_previous_app(previous);
+    forced
 }
 
 pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
@@ -205,6 +209,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
     let mut flash_until: Option<Instant> = None;
     let mut popup: Option<(Menu, Ids)> = None;
     let mut from_popup = false;
+    let mut popup_forced = false;
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(250));
@@ -213,7 +218,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         while let Ok(ev) = GlobalHotKeyEvent::receiver().try_recv() {
             if ev.state == HotKeyState::Pressed && ev.id == hotkey.id() {
                 let built = build_menu(&desc, false);
-                show_popup(&built.0, &window);
+                popup_forced = show_popup(&built.0, &window);
                 popup = Some(built);
                 from_popup = true;
             }
@@ -224,7 +229,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
             let target = ids.targets.iter().chain(popup.iter().flat_map(|p| p.1.targets.iter()))
                 .find(|(i, _)| i == id).map(|(_, t)| *t);
             if let Some(t) = target {
-                let force = force_modifier_held();
+                let force = (from_popup && popup_forced) || force_modifier_held();
                 let satisfied = if force { None } else { convert::already_satisfied(t) };
                 if let Some(reason) = satisfied {
                     eprintln!("ct: clipboard unchanged: {reason} (hold the modifier to force)");
@@ -252,6 +257,7 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 } }
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
                 from_popup = false;
+                popup_forced = false;
             } else if id == "about" {
                 let _ = open_url(ABOUT_URL);
             } else if id == "accessibility" {
