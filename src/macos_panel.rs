@@ -9,12 +9,12 @@ use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2::{define_class, msg_send, AllocAnyThread, DefinedClass, MainThreadMarker, MainThreadOnly};
 use objc2_app_kit::{
-    NSAppearance, NSAppearanceCustomization, NSAppearanceNameAqua, NSAttributedStringAppKitDocumentFormats, NSBackingStoreType, NSBezierPath, NSButton, NSColor,
+    NSAttributedStringAppKitDocumentFormats, NSBackgroundColorAttributeName, NSBackingStoreType, NSBezierPath, NSButton, NSColor,
     NSControlStateValueOn, NSEvent, NSEventModifierFlags, NSFont, NSFontAttributeName, NSFontWeightMedium, NSFontWeightRegular,
     NSFontWeightSemibold, NSForegroundColorAttributeName, NSPanel, NSScreen, NSScrollView, NSStringDrawing, NSTextView,
     NSTrackingArea, NSTrackingAreaOptions, NSView, NSWindowStyleMask, NSWindowTitleVisibility,
 };
-use objc2_foundation::{NSAttributedString, NSAttributedStringKey, NSData, NSDictionary, NSPoint, NSRect, NSSize, NSString};
+use objc2_foundation::{NSAttributedString, NSAttributedStringKey, NSData, NSDictionary, NSPoint, NSRange, NSRect, NSSize, NSString};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
@@ -230,19 +230,24 @@ impl ChooserView {
         match s.previews.get(key) {
             Some(Preview::Rich(attr)) => {
                 text.setString(&NSString::from_str(""));
-                if let Some(storage) = unsafe { text.textStorage() } { storage.setAttributedString(attr); }
+                if let Some(storage) = unsafe { text.textStorage() } {
+                    storage.beginEditing();
+                    storage.setAttributedString(attr);
+                    // Preview only: drop background colours (dark-theme HTML copied from editors), so the
+                    // text stays readable. The clipboard keeps them; the target app decides.
+                    storage.removeAttribute_range(unsafe { NSBackgroundColorAttributeName }, NSRange::new(0, storage.length()));
+                    storage.endEditing();
+                }
             }
             Some(Preview::Plain(t)) => {
                 text.setString(&NSString::from_str(t));
                 text.setFont(Some(&mono(12.0, Weight::Regular)));
-                // The preview is always light (paper-like); pick explicit colours, since the
-                // semantic ones would resolve against the panel's dark appearance.
-                text.setTextColor(Some(&NSColor::blackColor()));
+                text.setTextColor(Some(&NSColor::textColor()));
             }
             Some(Preview::Empty(t)) => {
                 text.setString(&NSString::from_str(t));
                 text.setFont(Some(&NSFont::systemFontOfSize(12.0)));
-                text.setTextColor(Some(&NSColor::darkGrayColor()));
+                text.setTextColor(Some(&NSColor::secondaryLabelColor()));
             }
             None => {}
         }
@@ -371,7 +376,8 @@ fn build(mtm: MainThreadMarker) -> (Retained<ChooserPanel>, Retained<ChooserView
     view.addSubview(&cb);
     *view.ivars().checkbox.borrow_mut() = Some(cb);
 
-    // Preview: scroll view + text view, always light like a sheet of paper so rich content reads well.
+    // Preview: scroll view + text view following the system theme; document colours (black text
+    // from RTF/HTML) are remapped for dark mode by AppKit.
     let preview_rect = NSRect::new(NSPoint::new(LIST_W, 30.0), NSSize::new(PANEL_W - LIST_W - PAD, PANEL_H - 30.0 - 34.0));
     let scroll = NSScrollView::initWithFrame(NSScrollView::alloc(mtm), preview_rect);
     scroll.setHasVerticalScroller(true);
@@ -389,7 +395,7 @@ fn build(mtm: MainThreadMarker) -> (Retained<ChooserPanel>, Retained<ChooserView
         container.setWidthTracksTextView(true);
         container.setContainerSize(NSSize::new(preview_rect.size.width, f64::MAX));
     }
-    if let Some(light) = NSAppearance::appearanceNamed(unsafe { NSAppearanceNameAqua }) { scroll.setAppearance(Some(&light)); }
+    text.setUsesAdaptiveColorMappingForDarkAppearance(true);
     scroll.setDocumentView(Some(&text));
     view.addSubview(&scroll);
     *view.ivars().text.borrow_mut() = Some(text);
