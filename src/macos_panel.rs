@@ -115,9 +115,14 @@ define_class!(
         #[unsafe(method(flagsChanged:))]
         fn flags_changed(&self, event: &NSEvent) {
             let held = event.modifierFlags().contains(NSEventModifierFlags::Option);
-            if held != self.ivars().option_held.get() {
-                self.ivars().option_held.set(held);
-                if let Some(cb) = &*self.ivars().checkbox.borrow() { cb.setState(if held { NSControlStateValueOn } else { 0 }); }
+            let was = self.ivars().option_held.get();
+            if held && !was {
+                // A fresh ⌥ press after the panel opened: arm "force" (the checkbox stays on until chosen or toggled).
+                self.ivars().option_held.set(true);
+                if let Some(cb) = &*self.ivars().checkbox.borrow() { cb.setState(NSControlStateValueOn); }
+            } else if !held && was {
+                self.ivars().option_held.set(false);
+                if let Some(cb) = &*self.ivars().checkbox.borrow() { cb.setState(0); }
             }
         }
 
@@ -230,12 +235,14 @@ impl ChooserView {
             Some(Preview::Plain(t)) => {
                 text.setString(&NSString::from_str(t));
                 text.setFont(Some(&mono(12.0, Weight::Regular)));
-                text.setTextColor(Some(&NSColor::textColor()));
+                // The preview is always light (paper-like); pick explicit colours, since the
+                // semantic ones would resolve against the panel's dark appearance.
+                text.setTextColor(Some(&NSColor::blackColor()));
             }
             Some(Preview::Empty(t)) => {
                 text.setString(&NSString::from_str(t));
                 text.setFont(Some(&NSFont::systemFontOfSize(12.0)));
-                text.setTextColor(Some(&NSColor::secondaryLabelColor()));
+                text.setTextColor(Some(&NSColor::darkGrayColor()));
             }
             None => {}
         }
@@ -399,8 +406,9 @@ pub fn show() {
         let guard = slot.borrow();
         let (panel, view) = guard.as_ref().unwrap();
         view.load_rows();
-        view.ivars().option_held.set(NSEvent::modifierFlags_class().contains(NSEventModifierFlags::Option));
-        if let Some(cb) = &*view.ivars().checkbox.borrow() { cb.setState(if view.ivars().option_held.get() { NSControlStateValueOn } else { 0 }); }
+        // Start unchecked: the hotkey itself usually contains ⌥, so the current modifier state means nothing yet.
+        view.ivars().option_held.set(false);
+        if let Some(cb) = &*view.ivars().checkbox.borrow() { cb.setState(0); }
         view.refresh_preview();
         // Position: just under the pointer, kept inside the screen.
         let mouse = NSEvent::mouseLocation();
