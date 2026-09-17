@@ -74,24 +74,42 @@ ct install [--hotkey ...] [--no-paste]   start the daemon now and at every login
 ct uninstall                         stop it and remove it from login
 ```
 
-The default hotkey is Ctrl+Alt+Cmd+V on macOS (⌃⌥⌘V) and Ctrl+Alt+Win+V on Windows. Pressing it
-pops up a menu at the mouse pointer that shows which flavors are on the clipboard (plain text,
-HTML, RTF), a preview, and the target formats: Rich text, Markdown, Plain text, HTML source,
-Text only. The same menu is available from the clipboard icon in the menu bar / tray, with Quit.
-A short "✓ Rich text" confirmation appears next to the icon after each conversion.
+The default hotkey is Ctrl+Alt+Cmd+V on macOS (⌃⌥⌘V) and Ctrl+Alt+Win+V on Windows.
 
-Picking a format from the hotkey popup converts the clipboard, gives focus back to the app you
-were in, and pastes the result there (⌘V on macOS, Ctrl+V on Windows). On macOS this needs the
-Accessibility permission for `ct`; the system asks the first time. Use `--no-paste` to only
-convert and paste yourself.
+### macOS: the chooser panel
+
+Pressing the hotkey opens a floating panel next to the pointer. The app you are in keeps the
+focus. Left: the targets (Rich text, Markdown, Plain text, HTML source, Text only) and a
+"Force conversion" checkbox. Right: a full, scrollable preview of what the chosen target will
+put on the clipboard, rendered by the system text engine (the one TextEdit and Notes use) for
+rich text, as source for Markdown and HTML, as text otherwise. The preview never touches the
+clipboard: only choosing does.
+
+- Hover or ↑↓ to select, click, ⏎ or 1 to 5 to choose, esc to close.
+- Hold ⌥ (or press space) to force a conversion the skip rule would leave alone.
+- Right-click hides a choice (kept in `~/.config/clipto/hidden`), ⌘R restores all.
+- Choosing converts the clipboard and pastes into the app you came from (⌘V is simulated,
+  which needs the Accessibility permission; the menu bar icon shows the status and opens the
+  right Settings pane). `--no-paste` disables the paste.
+- Rich text for Apple Notes, TextEdit, Pages and Stickies is written as RTF without HTML,
+  because those apps pick HTML when present and flatten it to their own styles. Other apps get
+  HTML plus RTF. On the command line, `ct rich --rtf` does the same.
+
+Background colours are stripped in the preview only, so dark-theme HTML copied from editors
+stays readable; the clipboard keeps them and the destination app decides.
+
+### Windows: the popup menu
+
+The hotkey pops up a context menu at the pointer listing the flavors present, a preview line,
+and the targets. Hold Alt while choosing to force a conversion. The result is pasted with a
+simulated Ctrl+V, no permission needed. The daemon detaches from its console when it starts.
 
 Hotkey names: `ctrl`, `alt`, `shift`, `super` (Cmd on macOS, Win on Windows), letters, digits,
 `f1`..`f12`, `space`, `enter`, `tab`, `escape`, joined with `+`.
 
 Login start uses a LaunchAgent (`~/Library/LaunchAgents/me.jkn.clipto.plist`) on macOS and the
-`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` key on Windows. No Accessibility permission
-is needed on macOS: the hotkey goes through the Carbon hotkey API. On Windows the daemon detaches
-from its console window when it starts.
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` key on Windows. The hotkey itself needs no
+Accessibility permission on macOS (Carbon hotkey API); only the paste does.
 
 ## How clipboard flavors work
 
@@ -123,6 +141,9 @@ header) and `Rich Text Format`.
 - `daemon.rs`: tao event loop, tray-icon, muda menus and global-hotkey. These crates call the
   native APIs: NSStatusItem, NSMenu and Carbon hotkeys on macOS; Shell_NotifyIcon, TrackPopupMenu
   and RegisterHotKey on Windows.
+- `macos_panel.rs`: the chooser panel, written directly against AppKit through objc2: a
+  non-activating NSPanel, a custom NSView for the list, an NSButton checkbox and an NSTextView
+  preview. `config.rs` stores the hidden choices.
 - `swift/`: the original macOS-only Swift implementation, kept as the behaviour reference.
 
 Limitations: RTF carries no heading level, and reading an RTF-only clipboard flattens nested
