@@ -57,9 +57,15 @@ impl Target {
     /// conversions only update the plain-text flavor and keep HTML/RTF, unless forced.
     pub fn replaces_all(self) -> bool { matches!(self, Target::Rich | Target::Text) }
     /// Which clipboard flavors to try first. The private Markdown flavor wins when present.
+    /// `rich` and `html` build from the text when it looks like Markdown (Markdown typed in a
+    /// browser field comes with a useless HTML wrapper), otherwise from the rich flavors.
     pub fn prefer(self) -> [Flavor; 4] {
         match self {
-            Target::Rich | Target::Html | Target::Text => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
+            Target::Text => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
+            Target::Rich | Target::Html => {
+                let text_is_md = clipboard::read(Flavor::Text).map(|b| looks_like_markdown(&String::from_utf8_lossy(&b))).unwrap_or(false);
+                if text_is_md { [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf] } else { [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text] }
+            }
             Target::Md | Target::Plain => [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text],
         }
     }
@@ -147,7 +153,7 @@ pub fn already_satisfied(target: Target) -> Option<String> {
     let has = |f: Flavor| present.contains(&f);
     let text = || clipboard::read(Flavor::Text).and_then(|b| String::from_utf8(b).ok()).unwrap_or_default();
     match target {
-        Target::Rich => has(Flavor::Html).then(|| "HTML is already on the clipboard".to_string()),
+        Target::Rich => (has(Flavor::Html) && !looks_like_markdown(&text())).then(|| "HTML is already on the clipboard and the text is not Markdown".to_string()),
         Target::Md => {
             if !has(Flavor::Text) { return None; }
             if has(Flavor::Md) {

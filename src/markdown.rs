@@ -84,6 +84,8 @@ fn normalize(s: &str) -> String {
     let mut blank = 0;
     for line in s.lines() {
         let l = line.trim_end();
+        // Empty links come from icon-only anchors (GitHub heading permalinks): drop them.
+        if l.starts_with("[](") && l.ends_with(')') { continue; }
         if l.is_empty() {
             blank += 1;
             if blank > 1 { continue; }

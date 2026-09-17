@@ -33,7 +33,7 @@ ct                 help plus what is on the clipboard right now (previews cut at
 ct rich    (ct r)  Markdown -> rich text (HTML + RTF + plain). Pasting keeps formatting
 ct md      (ct m)  rich text (HTML/RTF) -> Markdown source, in the plain-text flavor
 ct plain   (ct p)  Markdown or rich text -> plain text, syntax stripped, bullets as "•"
-ct html    (ct h)  Markdown -> HTML source, in the plain-text flavor
+ct html    (ct h)  Markdown or rich text -> clean HTML source, in the plain-text flavor
 ct text    (ct t)  keep only the plain-text flavor (drop HTML/RTF)
 
 -i FILE            read FILE ('-' = stdin) instead of the clipboard
@@ -44,8 +44,8 @@ ct text    (ct t)  keep only the plain-text flavor (drop HTML/RTF)
 ```
 
 If the clipboard already holds what you ask for, nothing is converted and the clipboard is left
-untouched: `rich` when HTML is present, `md` when there is no rich flavor or the text already
-looks like Markdown, `plain` when the text has no Markdown syntax, `text` when only plain text
+untouched: `rich` when HTML is present and the text is not Markdown, `md` when there is no rich
+flavor or the text already looks like Markdown, `plain` when the text has no Markdown syntax, `text` when only plain text
 is there. `rich` also stores the Markdown source in a private flavor (`me.jkn.clipto.markdown` on macOS,
 `ClipTo Markdown` on Windows) that no other app sees, so `ct md` afterwards restores it exactly.
 This never degrades content copied from a rich app. `-f` forces the conversion. From the hotkey popup, hold ⌥ (Alt on Windows)

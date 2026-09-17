@@ -49,10 +49,17 @@ pub fn write(items: &[(Flavor, Vec<u8>)], keep_others: bool) -> Result<(), Strin
         .collect();
     if keep_others {
         let written: Vec<String> = items.iter().map(|(f, _)| ns_type(*f).to_string()).collect();
+        let writing_text = items.iter().any(|(f, _)| *f == Flavor::Text);
         if let Some(existing) = p.types() {
             for t in existing.iter() {
                 let name = t.to_string();
                 if written.contains(&name) { continue; }
+                // Legacy pboard types ("NSStringPboardType", "Apple HTML pasteboard type", ...) are aliases
+                // of the modern UTIs: re-adding them would overwrite what we just wrote. Same for the
+                // UTF-16 variants of the text flavor.
+                let legacy = !name.contains('.') || name.contains(' ');
+                let text_alias = writing_text && (name.starts_with("public.utf16") || name == "public.plain-text");
+                if legacy || text_alias { continue; }
                 if let Some(d) = p.dataForType(&t) { all.push((NSString::from_str(&name), d)); }
             }
         }
