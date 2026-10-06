@@ -2,7 +2,6 @@
 //! context menu. Left: the target list (mouse, keyboard, hover), a "force" checkbox that
 //! follows ⌥, and hints. Right: a native NSTextView with the full, scrollable result, rendered
 //! by the same engine TextEdit and Notes use. The app that had focus keeps it.
-use crate::clipboard;
 use crate::config;
 use crate::convert::{self, Flavor, Target};
 use objc2::rc::Retained;
@@ -18,7 +17,7 @@ use objc2_foundation::{NSAttributedString, NSAttributedStringKey, NSData, NSDict
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
-pub struct Choice { pub target: Target, pub force: bool, pub app_id: Option<String> }
+pub struct Choice { pub target: Target, pub force: bool, pub app_id: Option<String>, pub items: Vec<(Flavor, Vec<u8>)> }
 
 thread_local! {
     static CHOICE: RefCell<Option<Choice>> = const { RefCell::new(None) };
@@ -46,7 +45,8 @@ struct State {
     rows: Vec<Row>,
     selected: usize,
     hover: Option<usize>,
-    previews: HashMap<&'static str, Preview>,
+    previews: HashMap<(&'static str, bool), Preview>,
+    items: Vec<(Flavor, Vec<u8>)>,
 }
 
 struct ViewIvars {
@@ -126,6 +126,12 @@ define_class!(
                 self.ivars().option_held.set(false);
                 if let Some(cb) = &*self.ivars().checkbox.borrow() { cb.setState(0); }
             }
+            self.refresh_preview();
+        }
+
+        #[unsafe(method(forceChanged:))]
+        fn force_changed(&self, _sender: Option<&AnyObject>) {
+            self.refresh_preview();
         }
 
         #[unsafe(method(keyDown:))]
@@ -147,6 +153,7 @@ define_class!(
                         if let Some(cb) = &*self.ivars().checkbox.borrow() {
                             cb.setState(if cb.state() == NSControlStateValueOn { 0 } else { NSControlStateValueOn });
                         }
+                        self.refresh_preview();
                     }
                 }
             }
@@ -191,7 +198,8 @@ impl ChooserView {
         let target = { let s = self.ivars().state.borrow(); match s.rows.get(i) { Some(r) => r.target, None => return } };
         let force = self.force();
         let app_id = TARGET_APP.with(|a| a.borrow().clone());
-        CHOICE.with(|c| *c.borrow_mut() = Some(Choice { target, force, app_id }));
+        let items = self.ivars().state.borrow().items.clone();
+        CHOICE.with(|c| *c.borrow_mut() = Some(Choice { target, force, app_id, items }));
         close_panel();
     }
 
@@ -218,19 +226,23 @@ impl ChooserView {
         s.selected = s.selected.min(s.rows.len().saturating_sub(1));
         s.hover = None;
         s.previews.clear();
+        s.items = convert::capture();
     }
 
     /// Compute (and cache) what the selected target would put on the clipboard, then show it.
     fn refresh_preview(&self) {
         let target = { let s = self.ivars().state.borrow(); match s.rows.get(s.selected) { Some(r) => r.target, None => return } };
-        let key = target.name();
-        if !self.ivars().state.borrow().previews.contains_key(key) {
-            let preview = build_preview(target);
+        let force = self.force();
+        let key = (target.name(), force);
+        if !self.ivars().state.borrow().previews.contains_key(&key) {
+            let items = self.ivars().state.borrow().items.clone();
+            let rtf_only = TARGET_APP.with(|a| a.borrow().as_deref().map(convert::prefers_rtf).unwrap_or(false));
+            let preview = build_preview(&items, target, force, rtf_only);
             self.ivars().state.borrow_mut().previews.insert(key, preview);
         }
         let Some(text) = self.ivars().text.borrow().clone() else { return };
         let s = self.ivars().state.borrow();
-        match s.previews.get(key) {
+        match s.previews.get(&key) {
             Some(Preview::Rich(attr)) => {
                 text.setString(&NSString::from_str(""));
                 if let Some(storage) = unsafe { text.textStorage() } {
@@ -290,7 +302,7 @@ impl ChooserView {
             None => "Preview".to_string(),
         };
         draw_text(&title, NSPoint::new(LIST_W + 4.0, 14.0), &sys(11.0, Weight::Semibold), &NSColor::secondaryLabelColor());
-        let clip = clipboard::present();
+        let clip: Vec<_> = s.items.iter().map(|(f, _)| *f).collect();
         let src = if clip.is_empty() { "clipboard: empty".to_string() } else { format!("clipboard: {}", clip.iter().map(|f| f.label()).collect::<Vec<_>>().join(", ")) };
         draw_text(&src, NSPoint::new(LIST_W + 4.0, bounds.size.height - 30.0), &NSFont::systemFontOfSize(10.0), &NSColor::tertiaryLabelColor());
     }
@@ -315,18 +327,11 @@ fn draw_text(text: &str, at: NSPoint, font: &NSFont, color: &NSColor) {
     unsafe { NSString::from_str(text).drawAtPoint_withAttributes(at, Some(&attrs)) };
 }
 
-fn build_preview(target: Target) -> Preview {
-    if let Some(reason) = convert::already_satisfied(target) {
-        // Show what is there already: the conversion would not run.
-        let current = match target {
-            Target::Rich => clipboard::read(Flavor::Rtf).and_then(|d| attributed_from_rtf(&d))
-                .or_else(|| clipboard::read(Flavor::Html).and_then(|d| attributed_from_html(&d))).map(Preview::Rich),
-            _ => clipboard::read(Flavor::Text).map(|b| Preview::Plain(String::from_utf8_lossy(&b).into_owned())),
-        };
-        return match current { Some(p) => p, None => Preview::Empty(format!("Unchanged: {reason}")) };
-    }
-    let Some(src) = convert::read_source(&target.prefer()) else { return Preview::Empty("Nothing usable on the clipboard".into()) };
-    let out = convert::convert_for(&src, target, false);
+fn build_preview(items: &[(Flavor, Vec<u8>)], target: Target, force: bool, rtf_only: bool) -> Preview {
+    let Some(plan) = convert::prepare_from(items, target, force, rtf_only) else {
+        return Preview::Empty("Nothing usable on the clipboard".into());
+    };
+    let out = plan.output;
     match target {
         Target::Rich => {
             let rtf = out.items.iter().find(|(f, _)| *f == Flavor::Rtf).and_then(|(_, d)| attributed_from_rtf(d));
@@ -373,7 +378,7 @@ fn build(mtm: MainThreadMarker) -> (Retained<ChooserPanel>, Retained<ChooserView
     view.addTrackingArea(&tracking);
 
     // Force checkbox under the rows.
-    let cb = unsafe { NSButton::checkboxWithTitle_target_action(&NSString::from_str("Force conversion (⌥)"), None, None, mtm) };
+    let cb = unsafe { NSButton::checkboxWithTitle_target_action(&NSString::from_str("Force conversion (⌥)"), Some(&view), Some(objc2::sel!(forceChanged:)), mtm) };
     let cb_y = ROWS_TOP + Target::ALL.len() as f64 * ROW_H + 8.0;
     cb.setFrame(NSRect::new(NSPoint::new(PAD + 4.0, cb_y), NSSize::new(LIST_W - 2.0 * PAD, 20.0)));
     view.addSubview(&cb);

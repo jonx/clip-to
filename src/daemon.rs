@@ -147,33 +147,20 @@ fn build_menu(hotkey_desc: &str, resident: bool) -> (Menu, Ids) {
 }
 
 #[cfg(not(target_os = "macos"))]
-struct PopupOutcome { forced: bool, app_id: Option<String> }
+struct PopupOutcome { forced: bool, selected: bool, previous: Option<clipboard::PreviousApp> }
 
 /// Shows the popup (blocking); reports whether the force modifier was held when it closed and
 /// which app had focus before.
 #[cfg(not(target_os = "macos"))]
 fn show_popup(menu: &Menu, window: &Window) -> PopupOutcome {
     let previous = clipboard::activate_app_for_popup();
-    #[cfg(target_os = "macos")]
-    unsafe {
-        use tao::platform::macos::WindowExtMacOS;
-        menu.show_context_menu_for_nsview(window.ns_view() as *const _, None);
-    }
-    #[cfg(target_os = "windows")]
-    unsafe {
+    let selected = unsafe {
         use tao::platform::windows::WindowExtWindows;
-        let hwnd = window.hwnd();
-        windows_sys::Win32::UI::WindowsAndMessaging::SetForegroundWindow(hwnd as _);
-        menu.show_context_menu_for_hwnd(hwnd, None);
-    }
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
-    { let _ = (menu, window); }
-    // Sample the modifier now: by the time the menu event is processed the key is often released.
+        menu.show_context_menu_for_hwnd(window.hwnd(), None)
+    };
     let forced = force_modifier_held();
-    let app_id = clipboard::previous_app_id(&previous);
-    // The menu blocks until dismissed; hand focus back so the user's ⌘V lands where they were.
     clipboard::restore_previous_app(previous);
-    PopupOutcome { forced, app_id }
+    PopupOutcome { forced, selected, previous }
 }
 
 pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
@@ -182,6 +169,10 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         Err(e) => { eprintln!("ct: {e}"); std::process::exit(2); }
     };
     let desc = describe(hotkey_spec);
+    #[cfg(target_os = "windows")]
+    let instance = crate::windows_instance::Instance::start().unwrap_or_else(|e| {
+        eprintln!("ct: {e}"); std::process::exit(1);
+    });
 
     #[cfg(target_os = "windows")]
     unsafe { windows_sys::Win32::System::Console::FreeConsole(); }
@@ -226,25 +217,21 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
     let mut popup: Option<(Menu, Ids)> = None;
     let mut from_popup = false;
     let mut popup_forced = false;
-    let mut popup_app: Option<String> = None;
+    #[cfg(target_os = "windows")]
+    let mut popup_previous = None;
 
     /// Run one conversion request (from the menu or the panel), flash the outcome, paste if asked.
-    fn perform(tray: &TrayIcon, t: Target, force: bool, from_popup: bool, app_id: Option<&str>, auto_paste: bool) {
-        let satisfied = if force { None } else { convert::already_satisfied(t) };
-        let ok = if let Some(reason) = satisfied {
-            eprintln!("ct: clipboard unchanged: {reason} (hold the modifier to force)");
-            tray.set_title(Some(format!(" = {}", t.title())));
-            true
-        } else {
-            match convert::read_source(&t.prefer()) {
-                None => { tray.set_title(Some(" ✗ empty")); false }
-                Some(src) => {
-                    let rtf_only = from_popup && app_id.map(convert::prefers_rtf).unwrap_or(false);
-                    let out = convert::convert_for(&src, t, rtf_only);
-                    match clipboard::write(&out.items, !t.replaces_all()) {
-                        Ok(()) => { tray.set_title(Some(format!(" ✓ {}", t.title()))); true }
-                        Err(e) => { tray.set_title(Some(format!(" ✗ {e}"))); false }
-                    }
+    fn perform(tray: &TrayIcon, t: Target, force: bool, from_popup: bool, app_id: Option<&str>, auto_paste: bool, items: &[(convert::Flavor, Vec<u8>)]) {
+        let rtf_only = from_popup && app_id.map(convert::prefers_rtf).unwrap_or(false);
+        let ok = match convert::prepare_from(items, t, force, rtf_only) {
+            None => { tray.set_title(Some(" ✗ empty")); false }
+            Some(plan) => {
+                // A panel selection commits the snapshot that was previewed, even if
+                // another application has since replaced the system clipboard.
+                let result = if plan.unchanged && convert::capture() == items { Ok(()) } else { clipboard::write(&plan.output.items, false) };
+                match result {
+                    Ok(()) => { tray.set_title(Some(format!(" ✓ {}", t.title()))); true }
+                    Err(e) => { eprintln!("ct: {e}"); tray.set_title(Some(format!(" ✗ {e}"))); false }
                 }
             }
         };
@@ -262,13 +249,15 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
         let tick = 250;
         *control_flow = ControlFlow::WaitUntil(Instant::now() + Duration::from_millis(tick));
         if let Event::LoopDestroyed = event { return; }
+        #[cfg(target_os = "windows")]
+        if instance.stop_requested() { *control_flow = ControlFlow::Exit; return; }
 
         #[cfg(target_os = "macos")]
         if let Some(at) = debug_panel_at { if !debug_panel_shown && Instant::now() >= at { debug_panel_shown = true; crate::macos_panel::show(); } }
         #[cfg(target_os = "macos")]
         if let Some(choice) = crate::macos_panel::take_choice() {
             eprintln!("ct: {} for {}{}", choice.target.title(), choice.app_id.as_deref().unwrap_or("unknown app"), if choice.force { " (forced)" } else { "" });
-            perform(&tray, choice.target, choice.force, true, choice.app_id.as_deref(), auto_paste);
+            perform(&tray, choice.target, choice.force, true, choice.app_id.as_deref(), auto_paste, &choice.items);
             flash_until = Some(Instant::now() + Duration::from_millis(1500));
         }
 
@@ -283,9 +272,9 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                     let built = build_menu(&desc, false);
                     let outcome = show_popup(&built.0, &window);
                     popup_forced = outcome.forced;
-                    popup_app = outcome.app_id;
+                    popup_previous = outcome.previous;
                     popup = Some(built);
-                    from_popup = true;
+                    from_popup = outcome.selected;
                 }
             }
         }
@@ -296,11 +285,17 @@ pub fn run(hotkey_spec: &str, auto_paste: bool) -> ! {
                 .find(|(i, _)| i == id).map(|(_, t)| *t);
             if let Some(t) = target {
                 let force = (from_popup && popup_forced) || force_modifier_held();
-                perform(&tray, t, force, from_popup, popup_app.as_deref(), auto_paste);
+                #[cfg(target_os = "windows")]
+                let may_paste = !from_popup || clipboard::restore_previous_app(popup_previous);
+                #[cfg(target_os = "macos")]
+                let may_paste = true;
+                if !may_paste { eprintln!("ct: could not restore the destination window; converted without pasting"); }
+                perform(&tray, t, force, from_popup, None, auto_paste && may_paste, &convert::capture());
                 flash_until = Some(Instant::now() + Duration::from_millis(1500));
                 from_popup = false;
                 popup_forced = false;
-                popup_app = None;
+                #[cfg(target_os = "windows")]
+                { popup_previous = None; }
             } else if id == "about" {
                 let _ = open_url(ABOUT_URL);
             } else if id == "accessibility" {

@@ -38,9 +38,12 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - name: Test (host target)
-        run: cargo test --release
+        run: cargo test --release --locked
+      - name: Test native Windows clipboard (isolated runner)
+        if: runner.os == 'Windows'
+        run: cargo test --release --locked native_clipboard -- --ignored --test-threads=1
       - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --locked --target ${{ matrix.target }}
       - name: Package (tar)
         if: matrix.archive == 'tar'
         shell: bash
@@ -72,5 +75,10 @@ jobs:
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
+          # macOS artifacts are signed and notarized locally before publication.
+          # Keep the release a draft until those assets and checksums are uploaded.
+          draft: true
+          files: |
+            artifacts/*windows*.zip
+            artifacts/*linux*.tar.gz
           generate_release_notes: true

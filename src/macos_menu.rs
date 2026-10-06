@@ -30,6 +30,7 @@ pub fn decorate(menu: &Menu, preview: Option<(&str, &str)>, badges: &[(String, S
             }
         }
         if let Some((_, badge)) = badges.iter().find(|(t, _)| *t == title) {
+            if !objc2::available!(macos = 14.0) { continue; }
             let b = NSMenuItemBadge::initWithString(NSMenuItemBadge::alloc(), &NSString::from_str(badge));
             item.setBadge(Some(&b));
         }

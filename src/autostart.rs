@@ -67,6 +67,7 @@ mod imp {
         if no_paste { cmd.push_str(" --no-paste"); }
         let (key, _) = RegKey::predef(HKEY_CURRENT_USER).create_subkey(RUN).map_err(|e| e.to_string())?;
         key.set_value(NAME, &cmd).map_err(|e| e.to_string())?;
+        crate::windows_instance::stop()?;
         let mut args = vec!["daemon".to_string()];
         if let Some(h) = hotkey { args.push("--hotkey".into()); args.push(h.into()); }
         if no_paste { args.push("--no-paste".into()); }
@@ -75,10 +76,14 @@ mod imp {
     }
 
     pub fn uninstall() -> Result<String, String> {
-        if let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(RUN, winreg::enums::KEY_SET_VALUE) {
-            let _ = key.delete_value(NAME);
+        match RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(RUN, winreg::enums::KEY_SET_VALUE) {
+            Ok(key) => if let Err(e) = key.delete_value(NAME) {
+                if e.kind() != std::io::ErrorKind::NotFound { return Err(e.to_string()); }
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {},
+            Err(e) => return Err(e.to_string()),
         }
-        let _ = std::process::Command::new("taskkill").args(["/F", "/IM", "ct.exe"]).output();
+        crate::windows_instance::stop()?;
         Ok("daemon stopped and removed from startup.".into())
     }
 }

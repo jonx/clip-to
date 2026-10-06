@@ -39,7 +39,7 @@ mod imp {
 
 #[cfg(target_os = "windows")]
 mod imp {
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{SendInput, INPUT, INPUT_KEYBOARD, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VK_CONTROL};
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, SendInput, INPUT, INPUT_KEYBOARD, KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VK_CONTROL, VK_SHIFT, VK_MENU, VK_LWIN, VK_RWIN};
 
     pub fn trusted(_prompt: bool) -> bool { true }
 
@@ -52,6 +52,13 @@ mod imp {
     }
 
     pub fn paste() -> Result<(), String> {
+        // In particular, Alt is still held when the user forces a conversion.
+        // SendInput does not reset physical modifiers; wait rather than send Ctrl+Alt+V.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        while [VK_CONTROL, VK_SHIFT, VK_MENU, VK_LWIN, VK_RWIN].iter().any(|vk| unsafe { GetAsyncKeyState(*vk as i32) < 0 }) {
+            if std::time::Instant::now() >= deadline { return Err("release modifier keys, then paste manually".into()); }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
         const VK_V: u16 = 0x56;
         let inputs = [key(VK_CONTROL, 0), key(VK_V, 0), key(VK_V, KEYEVENTF_KEYUP), key(VK_CONTROL, KEYEVENTF_KEYUP)];
         let sent = unsafe { SendInput(inputs.len() as u32, inputs.as_ptr(), std::mem::size_of::<INPUT>() as i32) };

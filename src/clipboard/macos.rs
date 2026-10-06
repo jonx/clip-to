@@ -10,7 +10,15 @@ use objc2_app_kit::{
 };
 use objc2_foundation::{NSArray, NSAttributedString, NSCopying, NSData, NSDictionary, NSRange, NSString};
 
+#[cfg(not(test))]
 fn pb() -> Retained<NSPasteboard> { NSPasteboard::generalPasteboard() }
+
+// Native clipboard regressions use a private pasteboard, never the user's data.
+#[cfg(test)]
+fn pb() -> Retained<NSPasteboard> {
+    thread_local! { static TEST_BOARD: Retained<NSPasteboard> = NSPasteboard::pasteboardWithUniqueName(); }
+    TEST_BOARD.with(Clone::clone)
+}
 
 /// Private flavor carrying the Markdown source written by `rich`.
 pub const MARKDOWN_TYPE: &str = "me.jkn.clipto.markdown";

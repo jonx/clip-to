@@ -44,9 +44,12 @@ pub fn wrap_html(body: &str) -> String {
 }
 
 pub fn from_html(html: &str) -> String {
-    use htmd::options::{BulletListMarker, CodeBlockFence, CodeBlockStyle, HrStyle, Options as HOptions};
+    use htmd::options::{BrStyle, BulletListMarker, CodeBlockFence, CodeBlockStyle, HrStyle, Options as HOptions};
+    let parser = htmd::HtmlToMarkdown::new();
+    let Ok(tree) = parser.html_to_tree(&code_in_pre(html)) else { return String::new() };
     let conv = htmd::HtmlToMarkdown::builder()
         .skip_tags(vec!["script", "style", "head", "title", "meta", "link"])
+        .add_handler(vec!["span", "p", "div", "b", "strong", "i", "em", "s", "del", "strike", "a", "font"], crate::office_html::handler(crate::office_html::styles(&tree)))
         .options(HOptions {
             bullet_list_marker: BulletListMarker::Dash,
             code_block_style: CodeBlockStyle::Fenced,
@@ -54,10 +57,11 @@ pub fn from_html(html: &str) -> String {
             hr_style: HrStyle::Dashes,
             ul_bullet_spacing: 1,
             ol_number_spacing: 1,
+            br_style: BrStyle::Backslash,
             ..Default::default()
         })
         .build();
-    let md = conv.convert(&code_in_pre(html)).unwrap_or_default();
+    let md = conv.tree_to_markdown(&tree);
     normalize(&md)
 }
 
@@ -180,6 +184,34 @@ pub fn to_plain(md: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn office_clipboard_keeps_emphasis_lists_and_signature_breaks() {
+        let md = from_html(include_str!("../tests/fixtures/office.html"));
+        let html = to_html(&md);
+        assert!(html.contains("<strong>Équipe</strong>"), "{md}");
+        assert!(html.contains("<em>compte rendu</em>"), "{md}");
+        assert!(html.contains("<strong>point</strong>"), "{md}");
+        assert!(html.contains("<ol start=\"3\">"), "{md}");
+        assert!(html.contains("<ul>"), "{md}");
+        assert!(md.contains("    - Sous-point"), "{md}");
+        assert!(html.find("</ul>").unwrap() < html.find("</ol>").unwrap(), "{html}");
+        assert!(html.contains("John<br />\n12 rue des Tests<br />\nParis"), "{html}");
+        assert!(!md.contains("mso-list") && !md.contains("•"), "{md}");
+    }
+
+    #[test]
+    fn css_emphasis_does_not_join_adjacent_words() {
+        let md = from_html("<p>A<span style='font-weight:700'> bold </span>word <span style='font-style:italic'>urgent</span></p>");
+        assert_eq!(md, "A **bold** word *urgent*\n");
+    }
+
+    #[test]
+    fn html_line_breaks_survive_markdown_round_trip() {
+        let md = from_html("<p>Bonjour<br>Cordialement</p>");
+        assert_eq!(to_html(&md), "<p>Bonjour<br />\nCordialement</p>\n");
+        assert_eq!(to_plain(&md), "Bonjour\nCordialement\n");
+    }
 
     const SAMPLE: &str = "# AROS work update\n## jonx — work in progress\n- **AFS+**: portable filesystem. Runs as `C:Ferail` on AROS.\n- **Zed**: blocked on `mmap`.\n## <name> — work in progress\n- ...\n";
 

@@ -15,6 +15,9 @@ mod markdown;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 mod paste;
 mod term;
+mod office_html;
+#[cfg(target_os = "windows")]
+mod windows_instance;
 
 use convert::{Flavor, Target};
 use std::io::Write;
@@ -43,7 +46,8 @@ fn print_help() {
         ("-i FILE", "read FILE ('-' = stdin) instead of the clipboard"),
         ("-o", "print the result instead of writing the clipboard"),
         ("-p", "print the result after writing the clipboard"),
-        ("-x", "drop the other flavors (md, plain, html keep HTML/RTF)"),
+        ("-x", "drop other flavors (default)"),
+        ("-k", "keep original rich formats (md, plain, html only)"),
         ("-f", "convert even if the clipboard already holds the requested format"),
         ("--rtf", "rich: RTF without HTML, for Notes, TextEdit, Pages (the popup does it automatically)"),
     ] { println!("  {}  {}", term::yellow(&pad(k, 10)), v); }
@@ -85,7 +89,7 @@ fn main() {
     let mut infile: Option<String> = None;
     let mut to_stdout = false;
     let mut also_print = false;
-    let mut exclusive = false;
+    let mut keep_formats = false;
     let mut force = false;
     let mut rtf_only = false;
     #[allow(unused_variables, unused_assignments)]
@@ -99,7 +103,8 @@ fn main() {
             "-i" => { i += 1; infile = Some(args.get(i).cloned().unwrap_or_else(|| "-".into())); }
             "-o" => to_stdout = true,
             "-p" => also_print = true,
-            "-x" => exclusive = true,
+            "-x" => keep_formats = false,
+            "-k" | "--keep-formats" => keep_formats = true,
             "-f" => force = true,
             "--rtf" => rtf_only = true,
             "--hotkey" => { i += 1; hotkey = args.get(i).cloned(); let _ = &hotkey; }
@@ -109,6 +114,11 @@ fn main() {
             other => positional.push(other.to_string()),
         }
         i += 1;
+    }
+    // The signed Finder app contains this binary named ClipTo; the CLI is named ct.
+    #[cfg(target_os = "macos")]
+    if positional.is_empty() && std::env::current_exe().ok().and_then(|p| p.file_name().map(|n| n == "ClipTo")).unwrap_or(false) {
+        positional.push("daemon".into());
     }
     let cmd = positional.first().map(String::as_str).unwrap_or("");
 
@@ -133,31 +143,30 @@ fn main() {
                 print_help();
                 std::process::exit(2);
             };
-            if infile.is_none() && !to_stdout && !force {
-                if let Some(reason) = convert::already_satisfied(target) {
-                    eprintln!("{} clipboard unchanged: {reason} {}", term::err_green("="), term::err_dim("(-f to convert anyway)"));
-                    return;
-                }
-            }
-            let src = match &infile {
+            let plan = match &infile {
                 Some(f) => {
                     let data = if f == "-" {
-                        let mut v = Vec::new(); std::io::Read::read_to_end(&mut std::io::stdin(), &mut v).ok(); v
+                        let mut v = Vec::new();
+                        std::io::Read::read_to_end(&mut std::io::stdin(), &mut v).unwrap_or_else(|e| fail(&e.to_string()));
+                        v
                     } else {
                         std::fs::read(f).unwrap_or_else(|e| fail(&format!("{f}: {e}")))
                     };
-                    convert::Source::Markdown(String::from_utf8_lossy(&data).into_owned())
+                    let src = convert::Source::Markdown(String::from_utf8_lossy(&data).into_owned());
+                    convert::Prepared { output: convert::convert_for(&src, target, rtf_only), unchanged: false }
                 }
-                None => convert::read_source(&target.prefer()).unwrap_or_else(|| {
+                None => convert::prepare_from(&convert::capture(), target, force, rtf_only).unwrap_or_else(|| {
                     fail(&format!("nothing usable on the clipboard (types: {})", clipboard::types().join(", ")))
                 }),
             };
-            let out = convert::convert_for(&src, target, rtf_only);
+            let out = plan.output;
             if to_stdout {
                 let _ = std::io::stdout().write_all(out.result.as_bytes());
             } else {
-                let keep = !exclusive && !target.replaces_all();
-                if let Err(e) = clipboard::write(&out.items, keep) { fail(&e); }
+                let keep = keep_formats && !target.replaces_all();
+                if !plan.unchanged {
+                    if let Err(e) = clipboard::write(&out.items, keep) { fail(&e); }
+                }
                 let present = clipboard::present();
                 let names = present.iter().map(|f| f.label()).collect::<Vec<_>>().join(", ");
                 let note = if keep && present.len() > 1 { term::err_dim("  (other flavors kept, -x to drop them)") } else { String::new() };

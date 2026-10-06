@@ -52,9 +52,36 @@ pub use imp::PreviousApp;
 /// Bring the process to the front before showing a popup menu and remember who had focus.
 #[cfg(target_os = "windows")]
 pub fn activate_app_for_popup() -> Option<PreviousApp> { imp::activate_app() }
-/// Bundle id of the app that had focus before the popup, when known.
-#[cfg(target_os = "windows")]
-pub fn previous_app_id(prev: &Option<PreviousApp>) -> Option<String> { imp::previous_app_id(prev) }
 /// Return focus to the previously active app once the popup is gone.
 #[cfg(target_os = "windows")]
-pub fn restore_previous_app(prev: Option<PreviousApp>) { imp::restore_app(prev) }
+pub fn restore_previous_app(prev: Option<PreviousApp>) -> bool { imp::restore_app(prev) }
+
+#[cfg(all(test, any(target_os = "macos", target_os = "windows")))]
+mod tests {
+    use super::*;
+    use crate::convert::{self, Source, Target};
+
+    #[test]
+    #[cfg_attr(target_os = "windows", ignore = "uses the system clipboard; run on an isolated Windows runner")]
+    fn native_clipboard_preserves_all_flavors_and_honors_text_choices() {
+        let rich = convert::convert_for(&Source::Markdown("# Café ☕\n\n**important**\n".into()), Target::Rich, false);
+        write(&rich.items, false).unwrap();
+        for (f, expected) in &rich.items {
+            assert!(imp::has(*f), "missing {f:?}");
+            assert_eq!(read(*f).as_deref(), Some(expected.as_slice()), "{f:?}");
+        }
+        let original_html = read(Flavor::Html).unwrap();
+        write(&[(Flavor::Text, b"replacement".to_vec())], true).unwrap();
+        assert_eq!(read(Flavor::Text).unwrap(), b"replacement");
+        assert_eq!(read(Flavor::Html).unwrap(), original_html);
+        assert!(read(Flavor::Md).is_some());
+
+        for target in [Target::Md, Target::Plain, Target::Html, Target::Text] {
+            write(&rich.items, false).unwrap();
+            let plan = convert::prepare_from(&convert::capture(), target, false, false).unwrap();
+            write(&plan.output.items, false).unwrap();
+            assert_eq!(present(), vec![Flavor::Text], "{target:?} must paste as text into rich editors");
+            assert_eq!(read(Flavor::Text).unwrap(), plan.output.result.as_bytes());
+        }
+    }
+}

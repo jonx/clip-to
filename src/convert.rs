@@ -53,8 +53,8 @@ impl Target {
             Target::Text => "keep only the plain-text flavor",
         }
     }
-    /// Whether the conversion replaces the whole clipboard by default. Text-producing
-    /// conversions only update the plain-text flavor and keep HTML/RTF, unless forced.
+    /// Whether --keep-formats is disallowed: rich rebuilds the representations,
+    /// and text explicitly strips every other format.
     pub fn replaces_all(self) -> bool { matches!(self, Target::Rich | Target::Text) }
     /// Which clipboard flavors to try first, given whether the text flavor looks like Markdown.
     /// The private Markdown flavor wins when present. `rich` and `html` build from the text when
@@ -62,16 +62,13 @@ impl Target {
     /// otherwise from the rich flavors.
     pub fn prefer_given(self, text_is_md: bool) -> [Flavor; 4] {
         match self {
-            Target::Text => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
+            Target::Text => [Flavor::Text, Flavor::Html, Flavor::Rtf, Flavor::Md],
             Target::Rich | Target::Html if text_is_md => [Flavor::Md, Flavor::Text, Flavor::Html, Flavor::Rtf],
             Target::Rich | Target::Html | Target::Md | Target::Plain => [Flavor::Md, Flavor::Html, Flavor::Rtf, Flavor::Text],
         }
     }
 
-    pub fn prefer(self) -> [Flavor; 4] {
-        let text_is_md = clipboard::read(Flavor::Text).map(|b| looks_like_markdown(&String::from_utf8_lossy(&b))).unwrap_or(false);
-        self.prefer_given(text_is_md)
-    }
+
 }
 
 /// What we read: either Markdown-ish text, or HTML from a rich source.
@@ -94,9 +91,48 @@ pub const RTF_PREFERRING_APPS: [&str; 4] = ["com.apple.Notes", "com.apple.TextEd
 #[cfg_attr(not(any(target_os = "macos", target_os = "windows")), allow(dead_code))]
 pub fn prefers_rtf(app_id: &str) -> bool { RTF_PREFERRING_APPS.contains(&app_id) }
 
+#[derive(Clone)]
 pub struct Output {
     pub result: String,
     pub items: Vec<(Flavor, Vec<u8>)>,
+}
+
+/// A single conversion plan shared by the CLI, popup and preview. Skipping the
+/// text conversion must still drop rich formats when the user selected text.
+pub struct Prepared {
+    pub output: Output,
+    pub unchanged: bool,
+}
+
+pub fn capture() -> Vec<(Flavor, Vec<u8>)> {
+    Flavor::ALL.into_iter().filter_map(|f| clipboard::read(f).map(|b| (f, b))).collect()
+}
+
+pub fn prepare_from(items: &[(Flavor, Vec<u8>)], target: Target, force: bool, rtf_only: bool) -> Option<Prepared> {
+    let bytes = |f| items.iter().find(|(flavor, _)| *flavor == f).map(|(_, b)| b.as_slice());
+    let string = |f| bytes(f).and_then(|b| std::str::from_utf8(b).ok()).map(str::to_owned);
+    let c = Snapshot {
+        present: items.iter().map(|(f, _)| *f).collect(),
+        text: string(Flavor::Text).unwrap_or_default(),
+        md_source: string(Flavor::Md),
+    };
+    if !force && satisfied(target, &c).is_some() {
+        if target != Target::Rich {
+            let result = string(Flavor::Text)?;
+            return Some(Prepared { output: Output { items: vec![(Flavor::Text, result.as_bytes().to_vec())], result }, unchanged: false });
+        }
+        if !rtf_only || c.has(Flavor::Rtf) {
+            return Some(Prepared {
+                output: Output {
+                    result: string(Flavor::Html).unwrap_or_default(),
+                    items: items.iter().filter(|(f, _)| !rtf_only || *f != Flavor::Html).cloned().collect(),
+                },
+                unchanged: !rtf_only,
+            });
+        }
+    }
+    let src = read_source_with(&target.prefer_given(looks_like_markdown(&c.text)), |f| bytes(f).map(<[u8]>::to_vec))?;
+    Some(Prepared { output: convert_for(&src, target, rtf_only), unchanged: false })
 }
 
 #[cfg(test)]
@@ -126,16 +162,16 @@ pub fn convert_for(src: &Source, target: Target, rtf_only: bool) -> Output {
 }
 
 /// Read the clipboard, trying flavors in order, and convert. Returns None when nothing is usable.
-pub fn read_source(prefer: &[Flavor]) -> Option<Source> {
+fn read_source_with(prefer: &[Flavor], read: impl Fn(Flavor) -> Option<Vec<u8>>) -> Option<Source> {
     for f in prefer {
         match f {
-            Flavor::Html => if let Some(b) = clipboard::read(Flavor::Html) {
+            Flavor::Html => if let Some(b) = read(Flavor::Html) {
                 if let Ok(s) = String::from_utf8(b) { return Some(Source::Html(s)); }
             },
-            Flavor::Rtf => if let Some(b) = clipboard::read(Flavor::Rtf) {
+            Flavor::Rtf => if let Some(b) = read(Flavor::Rtf) {
                 if let Some(h) = clipboard::rich::rtf_to_html(&b) { return Some(Source::Html(h)); }
             },
-            Flavor::Text | Flavor::Md => if let Some(b) = clipboard::read(*f) {
+            Flavor::Text | Flavor::Md => if let Some(b) = read(*f) {
                 if let Ok(s) = String::from_utf8(b) { return Some(Source::Markdown(s)); }
             },
         }
@@ -172,10 +208,6 @@ pub struct Snapshot {
 }
 
 impl Snapshot {
-    pub fn take() -> Snapshot {
-        let read = |f: Flavor| clipboard::read(f).map(|b| String::from_utf8_lossy(&b).into_owned());
-        Snapshot { present: clipboard::present(), text: read(Flavor::Text).unwrap_or_default(), md_source: read(Flavor::Md) }
-    }
     fn has(&self, f: Flavor) -> bool { self.present.contains(&f) }
 }
 
@@ -198,11 +230,49 @@ pub fn satisfied(target: Target, c: &Snapshot) -> Option<String> {
     }
 }
 
-pub fn already_satisfied(target: Target) -> Option<String> { satisfied(target, &Snapshot::take()) }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn text_only_keeps_the_visible_text_after_rich() {
+        let rich = convert(&Source::Markdown("**important**".into()), Target::Rich);
+        let plain = flavor(&rich, Flavor::Text).unwrap();
+        let plan = prepare_from(&rich.items, Target::Text, false, false).unwrap();
+        assert_eq!(plan.output.result, plain);
+        assert_eq!(plan.output.items, vec![(Flavor::Text, plain.into_bytes())]);
+    }
+
+    #[test]
+    fn satisfied_markdown_still_removes_rich_flavors() {
+        let items = vec![(Flavor::Text, b"# Already Markdown".to_vec()), (Flavor::Html, b"<b>Other</b>".to_vec())];
+        let plan = prepare_from(&items, Target::Md, false, false).unwrap();
+        assert!(!plan.unchanged);
+        assert_eq!(plan.output.items, vec![items[0].clone()]);
+    }
+
+    #[test]
+    fn forced_preview_and_execution_use_the_same_plan() {
+        let items = vec![(Flavor::Text, b"# Already Markdown".to_vec()), (Flavor::Html, b"<h2>Original HTML</h2>".to_vec())];
+        let normal = prepare_from(&items, Target::Md, false, false).unwrap();
+        let preview = prepare_from(&items, Target::Md, true, false).unwrap();
+        let chosen = prepare_from(&items, Target::Md, true, false).unwrap();
+        assert_eq!(normal.output.result, "# Already Markdown");
+        assert_eq!(preview.output.result, "## Original HTML\n");
+        assert_eq!(preview.output.items, chosen.output.items);
+        assert_eq!(items[0].1, b"# Already Markdown", "planning must not alter the source");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn notes_request_removes_html_even_when_rich_is_already_satisfied() {
+        let rich = convert(&Source::Markdown("**important**".into()), Target::Rich);
+        let plan = prepare_from(&rich.items, Target::Rich, false, true).unwrap();
+        assert!(!plan.unchanged);
+        assert!(flavor(&plan.output, Flavor::Html).is_none());
+        assert_eq!(flavor(&plan.output, Flavor::Rtf), flavor(&rich, Flavor::Rtf));
+    }
 
     const MD: &str = "# Update\n\n## Work in progress\n\n- **AFS+**: portable filesystem, runs as `C:Ferail` on AROS.\n- **Zed**: blocked on `mmap`.\n\n1. First\n2. Second\n\nSee [the site](https://aros.org) for more.\n";
     const HTML: &str = "<h2>Plan</h2><p>Some <b>bold</b>, <i>italic</i> and <a href=\"https://aros.org\">a link</a> with <code>code</code>.</p><ol><li>First</li><li>Second<ul><li>sub one</li><li>sub <b>two</b></li></ul></li></ol><pre>make -j8\n./configure</pre>";
