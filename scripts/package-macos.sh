@@ -6,8 +6,13 @@ cd "$(dirname "$0")/.."
 : "${APPLE_NOTARY_PROFILE:?Set APPLE_NOTARY_PROFILE to a notarytool Keychain profile}"
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 out="$PWD/target/distribution/v$version"
-stage="$out/stage"
-mkdir -p "$stage" "$out/arm64" "$out/x86_64"
+mkdir -p "$out"
+# macOS may protect an already-launched signed app from in-place modification.
+# Always stage fresh files so a second packaging run works too.
+work=$(mktemp -d "$out/work.XXXXXX")
+stage="$work/stage"
+mkdir -p "$stage" "$work/arm64" "$work/x86_64"
+printf '%s\n' "$stage" > "$out/macos-stage-path"
 export MACOSX_DEPLOYMENT_TARGET=11.0
 for arch in aarch64 x86_64; do
     cargo build --release --locked --target "$arch-apple-darwin"
@@ -40,16 +45,16 @@ codesign --force --options runtime --timestamp --identifier me.jkn.clipto.cli --
 # Sign architecture-specific CLI archives too. Submit all Mach-O variants once.
 for pair in 'aarch64 arm64' 'x86_64 x86_64'; do
     read -r rust_arch asset_arch <<< "$pair"
-    cp "target/$rust_arch-apple-darwin/release/ct" "$out/$asset_arch/ct"
-    cp README.md LICENSE "$out/$asset_arch/"
-    codesign --force --options runtime --timestamp --identifier me.jkn.clipto.cli --sign "$APPLE_DEV_ID" "$out/$asset_arch/ct"
+    cp "target/$rust_arch-apple-darwin/release/ct" "$work/$asset_arch/ct"
+    cp README.md LICENSE "$work/$asset_arch/"
+    codesign --force --options runtime --timestamp --identifier me.jkn.clipto.cli --sign "$APPLE_DEV_ID" "$work/$asset_arch/ct"
 done
-mkdir -p "$out/submission"
-ditto "$app" "$out/submission/ClipTo.app"
-cp "$stage/ct" "$out/submission/ct-universal"
-cp "$out/arm64/ct" "$out/submission/ct-arm64"
-cp "$out/x86_64/ct" "$out/submission/ct-x86_64"
-ditto -c -k --keepParent "$out/submission" "$out/notarization.zip"
+mkdir -p "$work/submission"
+ditto "$app" "$work/submission/ClipTo.app"
+cp "$stage/ct" "$work/submission/ct-universal"
+cp "$work/arm64/ct" "$work/submission/ct-arm64"
+cp "$work/x86_64/ct" "$work/submission/ct-x86_64"
+ditto -c -k --keepParent "$work/submission" "$out/notarization.zip"
 xcrun notarytool submit "$out/notarization.zip" --keychain-profile "$APPLE_NOTARY_PROFILE" --wait --output-format json > "$out/notarization.json"
 python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); print(r); sys.exit(0 if r.get("status")=="Accepted" else 1)' "$out/notarization.json"
 xcrun stapler staple "$app"
@@ -66,7 +71,7 @@ xcrun stapler staple "$dmg"
 xcrun stapler validate "$dmg"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
 for arch in arm64 x86_64; do
-    codesign --verify --strict --verbose=2 "$out/$arch/ct"
-    tar -C "$out/$arch" -czf "$out/ct-v$version-macos-$arch.tar.gz" ct README.md LICENSE
+    codesign --verify --strict --verbose=2 "$work/$arch/ct"
+    tar -C "$work/$arch" -czf "$out/ct-v$version-macos-$arch.tar.gz" ct README.md LICENSE
 done
 echo "Signed and notarized assets: $out"
